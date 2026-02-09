@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #5a4a4e;
+  background: #fff8f5;
+}
+
+body {
+  font-family: "Be Vietnam Pro", "Noto Sans SC", sans-serif;
+  background: #f6f2f1;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+.page-shell {
+  background: #f6f2f1;
+}
+
+.card-soft {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+}
+
+.tag-chip {
+  background: rgba(184, 147, 110, 0.12);
+  color: #b8936e;
+}
+
+.glass-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #f2c9d2 transparent;
+  scroll-behavior: smooth;
+}
+
+.glass-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.glass-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin-block: var(--scrollbar-track-margin, 12px);
+}
+
+.glass-scroll::-webkit-scrollbar-thumb {
+  background: rgba(246, 193, 204, 0.85);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.glass-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(233, 183, 195, 0.95);
+}
