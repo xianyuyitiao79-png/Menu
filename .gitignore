@@ -4,6 +4,9 @@ frontend/node_modules
 backend/node_modules
 frontend/dist
 backend/data/db.sqlite
+backend/data/db.sqlite-shm
+backend/data/db.sqlite-wal
+backend/data/*.sqlite
 .DS_Store
 .env
 .env.*
