@@ -8,99 +8,169 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-initSchema();
-seedIfEmpty();
-const db = getDb();
+let dbReady = false;
+async function ensureDb() {
+  if (dbReady) return;
+  await initSchema();
+  await seedIfEmpty();
+  dbReady = true;
+}
 
-app.get("/api/health", (req, res) => {
+app.use(async (_req, _res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/categories", (req, res) => {
-  const categories = db.prepare("SELECT id, name FROM categories ORDER BY id").all();
-  res.json(categories);
-});
-
-app.get("/api/dishes", (req, res) => {
-  const { categoryId } = req.query;
-  if (categoryId) {
-    const dishes = db
-      .prepare(
-        "SELECT id, category_id as categoryId, name, tags, image FROM dishes WHERE category_id = ? ORDER BY id"
-      )
-      .all(Number(categoryId));
-    return res.json(dishes);
+app.get("/api/categories", async (_req, res, next) => {
+  try {
+    const db = getDb();
+    const result = await db.query("SELECT id, name FROM categories ORDER BY id");
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
   }
-  const dishes = db
-    .prepare("SELECT id, category_id as categoryId, name, tags, image FROM dishes ORDER BY id")
-    .all();
-  res.json(dishes);
 });
 
-app.post("/api/orders", (req, res) => {
+app.get("/api/dishes", async (req, res, next) => {
+  try {
+    const db = getDb();
+    const { categoryId } = req.query;
+    if (categoryId) {
+      const result = await db.query(
+        "SELECT id, category_id as \"categoryId\", name, tags, image FROM dishes WHERE category_id = $1 ORDER BY id",
+        [Number(categoryId)]
+      );
+      return res.json(result.rows);
+    }
+    const result = await db.query(
+      "SELECT id, category_id as \"categoryId\", name, tags, image FROM dishes ORDER BY id"
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/orders", async (req, res, next) => {
   const { items, note } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ message: "items不能为空" });
   }
 
-  const createdAt = new Date().toISOString();
-  const insertOrder = db.prepare(
-    "INSERT INTO orders (created_at, note, status) VALUES (?, ?, ?)"
-  );
-  const insertItem = db.prepare(
-    "INSERT INTO order_items (order_id, dish_id, name, quantity) VALUES (?, ?, ?, ?)"
-  );
+  const db = getDb();
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+    const createdAt = new Date().toISOString();
+    const orderRes = await client.query(
+      "INSERT INTO orders (created_at, note, status) VALUES ($1, $2, $3) RETURNING id, created_at as \"createdAt\", note, status",
+      [createdAt, note || "", "new"]
+    );
+    const order = orderRes.rows[0];
 
-  const orderId = insertOrder.run(createdAt, note || "", "new").lastInsertRowid;
+    const getDish = await client.query("SELECT id, name FROM dishes WHERE id = ANY($1)", [
+      items.map((item) => Number(item.dishId))
+    ]);
+    const dishMap = new Map(getDish.rows.map((row) => [row.id, row.name]));
 
-  const getDish = db.prepare("SELECT id, name FROM dishes WHERE id = ?");
+    const insertItem =
+      "INSERT INTO order_items (order_id, dish_id, name, quantity) VALUES ($1, $2, $3, $4)";
 
-  items.forEach((item) => {
-    const dish = getDish.get(Number(item.dishId));
-    if (!dish) return;
-    const quantity = Number(item.quantity) || 1;
-    insertItem.run(orderId, dish.id, dish.name, quantity);
-  });
+    for (const item of items) {
+      const dishId = Number(item.dishId);
+      const dishName = dishMap.get(dishId);
+      if (!dishName) continue;
+      const quantity = Number(item.quantity) || 1;
+      await client.query(insertItem, [order.id, dishId, dishName, quantity]);
+    }
 
-  const order = db.prepare("SELECT id, created_at as createdAt, note, status FROM orders WHERE id = ?").get(orderId);
-  const orderItems = db
-    .prepare("SELECT dish_id as dishId, name, quantity FROM order_items WHERE order_id = ?")
-    .all(orderId);
+    const itemsRes = await client.query(
+      "SELECT dish_id as \"dishId\", name, quantity FROM order_items WHERE order_id = $1",
+      [order.id]
+    );
 
-  res.status(201).json({ ...order, items: orderItems });
-});
-
-app.get("/api/orders", (req, res) => {
-  const orders = db
-    .prepare("SELECT id, created_at as createdAt, note, status FROM orders ORDER BY id DESC")
-    .all();
-
-  const getItems = db.prepare(
-    "SELECT dish_id as dishId, name, quantity FROM order_items WHERE order_id = ?"
-  );
-
-  const withItems = orders.map((order) => ({
-    ...order,
-    items: getItems.all(order.id)
-  }));
-
-  res.json(withItems);
-});
-
-app.patch("/api/orders/:id/status", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body || {};
-  const allowed = ["new", "seen", "cooking", "done"];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ message: "status不合法" });
+    await client.query("COMMIT");
+    res.status(201).json({ ...order, items: itemsRes.rows });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    next(error);
+  } finally {
+    client.release();
   }
-  db.prepare("UPDATE orders SET status = ? WHERE id = ?").run(status, Number(id));
-  const order = db
-    .prepare("SELECT id, created_at as createdAt, note, status FROM orders WHERE id = ?")
-    .get(Number(id));
-  res.json(order);
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
+app.get("/api/orders", async (_req, res, next) => {
+  try {
+    const db = getDb();
+    const ordersRes = await db.query(
+      "SELECT id, created_at as \"createdAt\", note, status FROM orders ORDER BY id DESC"
+    );
+    const orders = ordersRes.rows;
+    if (!orders.length) return res.json([]);
+
+    const orderIds = orders.map((order) => order.id);
+    const itemsRes = await db.query(
+      "SELECT order_id as \"orderId\", dish_id as \"dishId\", name, quantity FROM order_items WHERE order_id = ANY($1)",
+      [orderIds]
+    );
+    const itemsByOrder = new Map();
+    itemsRes.rows.forEach((row) => {
+      if (!itemsByOrder.has(row.orderId)) itemsByOrder.set(row.orderId, []);
+      itemsByOrder.get(row.orderId).push({
+        dishId: row.dishId,
+        name: row.name,
+        quantity: row.quantity
+      });
+    });
+
+    res.json(
+      orders.map((order) => ({
+        ...order,
+        items: itemsByOrder.get(order.id) || []
+      }))
+    );
+  } catch (error) {
+    next(error);
+  }
 });
+
+app.patch("/api/orders/:id/status", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+    const allowed = ["new", "seen", "cooking", "done"];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: "status不合法" });
+    }
+    const db = getDb();
+    await db.query("UPDATE orders SET status = $1 WHERE id = $2", [status, Number(id)]);
+    const orderRes = await db.query(
+      "SELECT id, created_at as \"createdAt\", note, status FROM orders WHERE id = $1",
+      [Number(id)]
+    );
+    res.json(orderRes.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.use((error, _req, res, _next) => {
+  console.error(error);
+  res.status(500).json({ message: "服务器错误" });
+});
+
+if (process.env.VERCEL !== "1" && require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Backend running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

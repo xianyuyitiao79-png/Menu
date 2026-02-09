@@ -1,50 +1,50 @@
-const path = require("path");
-const Database = require("better-sqlite3");
+const { Pool } = require("pg");
 
-const dbPath = process.env.DB_PATH || path.join(__dirname, "..", "data", "db.sqlite");
-const db = new Database(dbPath);
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required");
+}
 
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+const pool = new Pool({
+  connectionString,
+  ssl: connectionString.includes("localhost") ? false : { rejectUnauthorized: false }
+});
 
-function initSchema() {
-  db.exec(`
+async function initSchema() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS dishes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      category_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      category_id INTEGER NOT NULL REFERENCES categories(id),
       name TEXT NOT NULL,
       tags TEXT,
-      image TEXT,
-      FOREIGN KEY (category_id) REFERENCES categories(id)
+      image TEXT
     );
 
     CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      created_at TEXT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL,
       note TEXT,
       status TEXT NOT NULL DEFAULT 'new'
     );
 
     CREATE TABLE IF NOT EXISTS order_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order_id INTEGER NOT NULL,
-      dish_id INTEGER NOT NULL,
+      id SERIAL PRIMARY KEY,
+      order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      dish_id INTEGER NOT NULL REFERENCES dishes(id),
       name TEXT NOT NULL,
-      quantity INTEGER NOT NULL,
-      FOREIGN KEY (order_id) REFERENCES orders(id),
-      FOREIGN KEY (dish_id) REFERENCES dishes(id)
+      quantity INTEGER NOT NULL
     );
   `);
 }
 
-function seedIfEmpty() {
-  const categoryCount = db.prepare("SELECT COUNT(1) as count FROM categories").get().count;
-  if (categoryCount > 0) return;
+async function seedIfEmpty() {
+  const { rows } = await pool.query("SELECT COUNT(1)::int as count FROM categories");
+  if (rows[0]?.count > 0) return;
 
   const categories = [
     { name: "凉菜 🥗" },
@@ -55,8 +55,12 @@ function seedIfEmpty() {
     { name: "主食 🍚" }
   ];
 
-  const insertCategory = db.prepare("INSERT INTO categories (name) VALUES (?)");
-  const categoryIds = categories.map((c) => insertCategory.run(c.name).lastInsertRowid);
+  const insertCategory = "INSERT INTO categories (name) VALUES ($1) RETURNING id";
+  const categoryIds = [];
+  for (const cat of categories) {
+    const result = await pool.query(insertCategory, [cat.name]);
+    categoryIds.push(result.rows[0].id);
+  }
 
   const dishes = [
     { categoryIndex: 0, name: "柠檬手撕鸡", tags: "招牌", image: "" },
@@ -73,17 +77,16 @@ function seedIfEmpty() {
     { categoryIndex: 5, name: "芝士焗红薯", tags: "甜甜", image: "" }
   ];
 
-  const insertDish = db.prepare(
-    "INSERT INTO dishes (category_id, name, tags, image) VALUES (?, ?, ?, ?)"
-  );
-
-  dishes.forEach((d) => {
-    insertDish.run(categoryIds[d.categoryIndex], d.name, d.tags, d.image);
-  });
+  const insertDish =
+    "INSERT INTO dishes (category_id, name, tags, image) VALUES ($1, $2, $3, $4)";
+  for (const dish of dishes) {
+    const categoryId = categoryIds[dish.categoryIndex];
+    await pool.query(insertDish, [categoryId, dish.name, dish.tags, dish.image]);
+  }
 }
 
 function getDb() {
-  return db;
+  return pool;
 }
 
 module.exports = { initSchema, seedIfEmpty, getDb };
