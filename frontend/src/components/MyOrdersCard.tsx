@@ -30,6 +30,7 @@ type MyOrdersCardProps = {
 
 export default function MyOrdersCard({ orders }: MyOrdersCardProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const shouldScroll = orders.length > 3;
 
   const toggleOrder = (orderId: string) => {
     setExpandedId((prev) => (prev === orderId ? null : orderId));
@@ -73,123 +74,135 @@ export default function MyOrdersCard({ orders }: MyOrdersCardProps) {
           还没有订单，快去下单吧～
         </div>
       ) : (
-        orders.map((order) => {
-          const isExpanded = expandedId === order.id;
-          const totalCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
-          return (
-            <div
-              key={order.id}
-              style={{
-                padding: 12,
-                borderRadius: 14,
-                background: "rgba(255,255,255,0.85)",
-                border: "1px solid rgba(237,231,233,0.8)"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#5A4A4E",
-                      lineHeight: "18px"
-                    }}
-                  >
-                    订单 {order.orderNo}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 12,
-                      color: "#A89B9E",
-                      lineHeight: "16px"
-                    }}
-                  >
-                    下单时间：{formatOrderTime(order.createdAt)}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 11,
-                      color: "#C17B8A"
-                    }}
-                  >
-                    共 {totalCount} 道菜
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-end",
-                    gap: 6
-                  }}
-                >
-                  <span
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: 12,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      ...statusStyles[order.status]
-                    }}
-                  >
-                    {order.status}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => toggleOrder(order.id)}
-                    style={{
-                      padding: "4px 10px",
-                      borderRadius: 999,
-                      border: "1px solid #F6C1CC",
-                      background: "white",
-                      color: "#C17B8A",
-                      fontSize: 11,
-                      cursor: "pointer"
-                    }}
-                  >
-                    {isExpanded ? "收起" : "查看订单"}
-                  </button>
-                </div>
-              </div>
-              {isExpanded && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                    background: "rgba(255,239,242,0.6)",
-                    borderRadius: 12,
-                    padding: 10,
-                    border: "1px dashed rgba(246,193,204,0.6)"
-                  }}
-                >
-                  {order.items.map((item, index) => (
+        <div
+          className="glass-scroll"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
+            maxHeight: shouldScroll ? 420 : "none",
+            overflowY: shouldScroll ? "auto" : "visible",
+            paddingRight: shouldScroll ? 4 : 0
+          }}
+        >
+          {orders.map((order) => {
+            const isExpanded = expandedId === order.id;
+            const totalCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+            return (
+              <div
+                key={order.id}
+                style={{
+                  padding: 12,
+                  borderRadius: 14,
+                  background: "rgba(255,255,255,0.85)",
+                  border: "1px solid rgba(237,231,233,0.8)"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
                     <div
-                      key={`${order.id}-${item.dishId}-${index}`}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        fontSize: 12,
-                        color: "#5A4A4E"
+                        fontSize: 14,
+                        fontWeight: 700,
+                        color: "#5A4A4E",
+                        lineHeight: "18px"
                       }}
                     >
-                      <span>{item.name ?? "用心烹制"}</span>
-                      <span>× {item.quantity}</span>
+                      订单 {order.orderNo}
                     </div>
-                  ))}
-                  {order.note && (
-                    <div style={{ fontSize: 11, color: "#B39BA0" }}>备注：{order.note}</div>
-                  )}
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        color: "#A89B9E",
+                        lineHeight: "16px"
+                      }}
+                    >
+                      下单时间：{formatOrderTime(order.createdAt)}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 11,
+                        color: "#C17B8A"
+                      }}
+                    >
+                      共 {totalCount} 道菜
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-end",
+                      gap: 6
+                    }}
+                  >
+                    <span
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: 12,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        ...statusStyles[order.status]
+                      }}
+                    >
+                      {order.status}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleOrder(order.id)}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        border: "1px solid #F6C1CC",
+                        background: "white",
+                        color: "#C17B8A",
+                        fontSize: 11,
+                        cursor: "pointer"
+                      }}
+                    >
+                      {isExpanded ? "收起" : "查看订单"}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })
+                {isExpanded && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                      background: "rgba(255,239,242,0.6)",
+                      borderRadius: 12,
+                      padding: 10,
+                      border: "1px dashed rgba(246,193,204,0.6)"
+                    }}
+                  >
+                    {order.items.map((item, index) => (
+                      <div
+                        key={`${order.id}-${item.dishId}-${index}`}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          fontSize: 12,
+                          color: "#5A4A4E"
+                        }}
+                      >
+                        <span>{item.name ?? "用心烹制"}</span>
+                        <span>× {item.quantity}</span>
+                      </div>
+                    ))}
+                    {order.note && (
+                      <div style={{ fontSize: 11, color: "#B39BA0" }}>备注：{order.note}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
