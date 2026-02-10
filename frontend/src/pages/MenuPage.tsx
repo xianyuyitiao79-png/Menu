@@ -566,7 +566,20 @@ export default function MenuPage() {
                           fontFamily: "Helvetica"
                         }}
                       >
-                        {dish.image ? "" : "暂无图片"}
+                        {dish.image ? (
+                          <img
+                            src={dish.image}
+                            alt={dish.name}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              borderRadius: 8
+                            }}
+                          />
+                        ) : (
+                          "暂无图片"
+                        )}
                       </div>
                       <div
                         style={{
