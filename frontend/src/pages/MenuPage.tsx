@@ -14,10 +14,9 @@ const imgVector = "https://www.figma.com/api/mcp/asset/e2dd9ec9-c047-43fa-98b6-1
 const imgVector1 = "https://www.figma.com/api/mcp/asset/750b4ede-c927-4584-8497-077fc028bbd4";
 
 type CategoryButton = {
-  id: string | number;
+  id: number;
   label: string;
   emoji: string;
-  top: number;
   height: number;
 };
 
@@ -34,26 +33,11 @@ export default function MenuPage() {
   const { categories, menuList, orders, messages, addMessage, avatars, setAvatar } =
     useAppStore();
   const dishes = menuList;
-  const [activeCategory, setActiveCategory] = useState<string | number>("private");
+  const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [cart, setCart] = useState<Record<number, { dish: Dish; qty: number }>>({});
   const [activeTab, setActiveTab] = useState<"menu" | "mine">("menu");
-  const prefsKey = "myPrefs";
   const defaultPrefs = ["少辣", "不要香菜", "爱甜口", "喜欢汤"];
-  const [prefs, setPrefs] = useState<string[]>(() => {
-    if (typeof window === "undefined") return defaultPrefs;
-    try {
-      const raw = window.localStorage.getItem(prefsKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.every((item) => typeof item === "string")) {
-          return parsed;
-        }
-      }
-    } catch {
-      // ignore localStorage errors
-    }
-    return defaultPrefs;
-  });
+  const [prefs, setPrefs] = useState<string[]>(defaultPrefs);
   const avatar = avatars.girlfriend_view || null;
   const chatMessages = messages as ChatMessage[];
   const [chatInput, setChatInput] = useState("");
@@ -86,13 +70,12 @@ export default function MenuPage() {
   }, [dishes]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(prefsKey, JSON.stringify(prefs));
-    } catch {
-      // ignore localStorage errors
-    }
-  }, [prefs, prefsKey]);
+    if (!categories.length) return;
+    setActiveCategory((prev) => {
+      if (prev && categories.some((item) => item.id === prev)) return prev;
+      return categories[0].id;
+    });
+  }, [categories]);
 
   useEffect(() => {
     if (activeTab !== "mine") return;
@@ -151,30 +134,19 @@ export default function MenuPage() {
   }, [incomingItems, dishes]);
 
   const categoryButtons: CategoryButton[] = useMemo(() => {
-    const mapped = categories.map((cat, index) => {
+    return categories.map((cat) => {
       const [name, emoji = ""] = cat.name.split(" ");
-      const topPositions = [271, 360, 449, 538, 627, 716];
       return {
         id: cat.id,
         label: name,
         emoji,
-        top: topPositions[index] ?? 271 + index * 89,
         height: 85
-      } as CategoryButton;
+      };
     });
-
-    return [
-      { id: "private", label: "私房菜", emoji: "✨", top: 183, height: 85 },
-      ...mapped,
-      { id: "original", label: "原创好菜", emoji: "💝", top: 805, height: 102 }
-    ];
   }, [categories]);
 
   const filteredDishes = useMemo(() => {
-    if (activeCategory === "private") return dishes;
-    if (activeCategory === "original") {
-      return dishes.filter((dish) => dish.tags?.includes("她最爱"));
-    }
+    if (!activeCategory) return dishes;
     return dishes.filter((dish) => dish.categoryId === activeCategory);
   }, [activeCategory, dishes]);
 

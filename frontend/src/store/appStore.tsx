@@ -71,69 +71,10 @@ type StoreContextValue = {
   };
 };
 
-const STORAGE_KEY = "couple-kitchen-store";
-const LEGACY_MESSAGES_KEY = "coupleChatMessages";
-const LEGACY_GIRL_AVATAR_KEY = "myAvatar";
-const LEGACY_BOY_AVATAR_KEY = "boyfriendAvatar";
 
-const defaultCategories: Category[] = [
-  { id: 1, name: "招牌 🍖" },
-  { id: 2, name: "私房 🍲" },
-  { id: 3, name: "轻食 🥗" },
-  { id: 4, name: "甜品 🍰" },
-  { id: 5, name: "饮品 🥤" }
-];
+const defaultCategories: Category[] = [];
 
-const defaultMenuList: MenuItem[] = [
-  {
-    id: 1,
-    categoryId: 1,
-    name: "秘制红烧肉",
-    tags: "她最爱",
-    image: "",
-    description: "祖传配方，肥而不腻"
-  },
-  {
-    id: 2,
-    categoryId: 1,
-    name: "手工狮子头",
-    tags: "招牌",
-    image: "",
-    description: "纯手工制作，鲜嫩多汁"
-  },
-  {
-    id: 3,
-    categoryId: 2,
-    name: "私房酱牛肉",
-    tags: "",
-    image: "",
-    description: "秘制酱汁，入味三分"
-  },
-  {
-    id: 4,
-    categoryId: 3,
-    name: "蜜汁烤南瓜",
-    tags: "她最爱",
-    image: "",
-    description: "软糯香甜，带点奶香"
-  },
-  {
-    id: 5,
-    categoryId: 4,
-    name: "草莓云朵杯",
-    tags: "",
-    image: "",
-    description: "粉色甜品，心动满分"
-  },
-  {
-    id: 6,
-    categoryId: 5,
-    name: "玫瑰花茶",
-    tags: "",
-    image: "",
-    description: "清香柔和，暖心暖胃"
-  }
-];
+const defaultMenuList: MenuItem[] = [];
 
 const defaultMessages: Message[] = [
   {
@@ -165,90 +106,8 @@ const defaultState: AppState = {
   avatars: {}
 };
 
-function safeParse(json: string | null) {
-  if (!json) return null;
-  try {
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-function normalizeMessages(input: any): Message[] {
-  if (!Array.isArray(input)) return [];
-  return input.filter(
-    (item) =>
-      item &&
-      typeof item.id === "string" &&
-      (item.sender === "me" || item.sender === "him") &&
-      typeof item.text === "string" &&
-      typeof item.createdAt === "string"
-  );
-}
-
-function normalizeMenuList(input: any): MenuItem[] {
-  if (!Array.isArray(input)) return [];
-  return input.filter(
-    (item) => item && typeof item.id === "number" && typeof item.name === "string"
-  );
-}
-
-function normalizeCategories(input: any): Category[] {
-  if (!Array.isArray(input)) return [];
-  return input.filter(
-    (item) => item && typeof item.id === "number" && typeof item.name === "string"
-  );
-}
-
 function loadState(): AppState {
-  if (typeof window === "undefined") return defaultState;
-  const stored = safeParse(window.localStorage.getItem(STORAGE_KEY));
-  if (stored) {
-    return {
-      userRole: stored.userRole === "boyfriend_admin" ? "boyfriend_admin" : "girlfriend_view",
-      categories: defaultCategories,
-      menuList: defaultMenuList,
-      orders: [],
-      messages: normalizeMessages(stored.messages) || defaultMessages,
-      avatars: typeof stored.avatars === "object" && stored.avatars ? stored.avatars : {}
-    };
-  }
-
-  const legacyMessages = safeParse(window.localStorage.getItem(LEGACY_MESSAGES_KEY));
-  const legacyGirlAvatar = window.localStorage.getItem(LEGACY_GIRL_AVATAR_KEY) || "";
-  const legacyBoyAvatar = window.localStorage.getItem(LEGACY_BOY_AVATAR_KEY) || "";
-  const legacyAvatars: Partial<Record<UserRole, string>> = {};
-  if (legacyGirlAvatar) legacyAvatars.girlfriend_view = legacyGirlAvatar;
-  if (legacyBoyAvatar) legacyAvatars.boyfriend_admin = legacyBoyAvatar;
-  const legacy = normalizeMessages(
-    Array.isArray(legacyMessages)
-      ? legacyMessages.map((item: any) => ({
-          ...item,
-          createdAt: item.createdAt ?? item.date ?? new Date().toISOString()
-        }))
-      : []
-  );
-
-  return {
-    ...defaultState,
-    orders: [],
-    messages: legacy.length ? legacy : defaultMessages,
-    avatars: legacyAvatars
-  };
-}
-
-function saveState(state: AppState) {
-  if (typeof window === "undefined") return;
-  try {
-    const payload = {
-      userRole: state.userRole,
-      messages: state.messages,
-      avatars: state.avatars
-    };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // ignore localStorage errors
-  }
+  return defaultState;
 }
 
 function getStatusMessage(status: StoredOrderStatus) {
@@ -310,10 +169,6 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => loadState());
 
   useEffect(() => {
-    saveState(state);
-  }, [state]);
-
-  useEffect(() => {
     let active = true;
     async function loadRemote() {
       try {
@@ -325,8 +180,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         setState((prev) => ({
           ...prev,
-          categories: categories.length ? categories : prev.categories,
-          menuList: dishes.length ? dishes : prev.menuList,
+          categories,
+          menuList: dishes,
           avatars:
             avatars && avatars.length
               ? avatars.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
@@ -335,14 +190,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
                   }
                   return acc;
                 }, {})
-              : prev.avatars
+              : {}
         }));
         const orders = await getOrders();
         if (!active) return;
         setState((prev) => ({
           ...prev,
           orders: orders.map((order) =>
-            mapApiOrderToStored(order, dishes.length ? dishes : prev.menuList)
+            mapApiOrderToStored(order, dishes)
           )
         }));
       } catch {
