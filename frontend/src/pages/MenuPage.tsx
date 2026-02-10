@@ -46,6 +46,7 @@ export default function MenuPage() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [cart, setCart] = useState<Record<number, { dish: Dish; qty: number }>>({});
   const [activeTab, setActiveTab] = useState<"menu" | "mine">("menu");
+  const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
   const defaultPrefs = ["少辣", "不要香菜", "爱甜口", "喜欢汤"];
   const [prefs, setPrefs] = useState<string[]>(defaultPrefs);
   const avatar = avatars.girlfriend_view || null;
@@ -535,12 +536,16 @@ export default function MenuPage() {
                     ? "rgba(193, 123, 138, 0.12)"
                     : "rgba(184, 147, 110, 0.12)";
                   const tagColor = isFavorite ? "#C17B8A" : "#B8936E";
+                  const rawImage = typeof dish.image === "string" ? dish.image.trim() : "";
+                  const normalizedImage =
+                    rawImage.startsWith("data:image") ? rawImage.replace(/\s+/g, "") : rawImage;
                   const imageSrc =
-                    typeof dish.image === "string" &&
-                    (dish.image.startsWith("data:image") ||
-                      dish.image.startsWith("http://") ||
-                      dish.image.startsWith("https://"))
-                      ? dish.image
+                    normalizedImage &&
+                    !brokenImages[dish.id] &&
+                    (normalizedImage.startsWith("data:image") ||
+                      normalizedImage.startsWith("http://") ||
+                      normalizedImage.startsWith("https://"))
+                      ? normalizedImage
                       : "";
 
                   return (
@@ -585,8 +590,7 @@ export default function MenuPage() {
                               borderRadius: 8
                             }}
                             onError={(event) => {
-                              const target = event.currentTarget;
-                              target.style.display = "none";
+                              setBrokenImages((prev) => ({ ...prev, [dish.id]: true }));
                             }}
                           />
                         ) : (
