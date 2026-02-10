@@ -184,19 +184,21 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   const refreshData = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, loadError: null }));
     try {
-      const [categories, dishes, avatars] = await Promise.all([
-        getCategories(),
-        getDishes(),
-        getAvatars()
-      ]);
+      const [categories, dishes] = await Promise.all([getCategories(), getDishes()]);
+      let avatarRows: { role?: string; avatar?: string }[] = [];
+      try {
+        avatarRows = await getAvatars();
+      } catch {
+        avatarRows = [];
+      }
       if (!mountedRef.current) return;
       setState((prev) => ({
         ...prev,
         categories,
         menuList: dishes,
         avatars:
-          avatars && avatars.length
-            ? avatars.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
+          avatarRows && avatarRows.length
+            ? avatarRows.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
                 if (item?.role) {
                   acc[item.role as UserRole] = item.avatar ?? "";
                 }
