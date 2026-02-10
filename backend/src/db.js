@@ -22,7 +22,8 @@ async function initSchema() {
       category_id INTEGER NOT NULL REFERENCES categories(id),
       name TEXT NOT NULL,
       tags TEXT,
-      image TEXT
+      image TEXT,
+      description TEXT
     );
 
     CREATE TABLE IF NOT EXISTS orders (
@@ -40,6 +41,8 @@ async function initSchema() {
       quantity INTEGER NOT NULL
     );
   `);
+
+  await pool.query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS description TEXT");
 }
 
 async function seedIfEmpty() {
@@ -63,25 +66,25 @@ async function seedIfEmpty() {
   }
 
   const dishes = [
-    { categoryIndex: 0, name: "柠檬手撕鸡", tags: "招牌", image: "" },
-    { categoryIndex: 0, name: "蒜香拍黄瓜", tags: "她最爱", image: "" },
-    { categoryIndex: 1, name: "西兰花炒口蘑", tags: "清爽", image: "" },
-    { categoryIndex: 1, name: "蒜蓉空心菜", tags: "快手", image: "" },
-    { categoryIndex: 2, name: "蜜汁烤鸡腿", tags: "招牌", image: "" },
-    { categoryIndex: 2, name: "黑椒牛肉粒", tags: "满足", image: "" },
-    { categoryIndex: 3, name: "黄油煎三文鱼", tags: "她最爱", image: "" },
-    { categoryIndex: 3, name: "蒜蓉扇贝", tags: "鲜美", image: "" },
-    { categoryIndex: 4, name: "奶油南瓜浓汤", tags: "治愈", image: "" },
-    { categoryIndex: 4, name: "海带豆腐汤", tags: "清淡", image: "" },
-    { categoryIndex: 5, name: "香葱蛋炒饭", tags: "主角", image: "" },
-    { categoryIndex: 5, name: "芝士焗红薯", tags: "甜甜", image: "" }
+    { categoryIndex: 0, name: "柠檬手撕鸡", tags: "招牌", image: "", description: "酸辣开胃" },
+    { categoryIndex: 0, name: "蒜香拍黄瓜", tags: "她最爱", image: "", description: "脆爽清香" },
+    { categoryIndex: 1, name: "西兰花炒口蘑", tags: "清爽", image: "", description: "口感清新" },
+    { categoryIndex: 1, name: "蒜蓉空心菜", tags: "快手", image: "", description: "下饭首选" },
+    { categoryIndex: 2, name: "蜜汁烤鸡腿", tags: "招牌", image: "", description: "外焦里嫩" },
+    { categoryIndex: 2, name: "黑椒牛肉粒", tags: "满足", image: "", description: "浓郁黑椒" },
+    { categoryIndex: 3, name: "黄油煎三文鱼", tags: "她最爱", image: "", description: "鲜嫩多汁" },
+    { categoryIndex: 3, name: "蒜蓉扇贝", tags: "鲜美", image: "", description: "海味十足" },
+    { categoryIndex: 4, name: "奶油南瓜浓汤", tags: "治愈", image: "", description: "香甜绵密" },
+    { categoryIndex: 4, name: "海带豆腐汤", tags: "清淡", image: "", description: "清爽暖胃" },
+    { categoryIndex: 5, name: "香葱蛋炒饭", tags: "主角", image: "", description: "粒粒分明" },
+    { categoryIndex: 5, name: "芝士焗红薯", tags: "甜甜", image: "", description: "甜蜜绵软" }
   ];
 
   const insertDish =
-    "INSERT INTO dishes (category_id, name, tags, image) VALUES ($1, $2, $3, $4)";
+    "INSERT INTO dishes (category_id, name, tags, image, description) VALUES ($1, $2, $3, $4, $5)";
   for (const dish of dishes) {
     const categoryId = categoryIds[dish.categoryIndex];
-    await pool.query(insertDish, [categoryId, dish.name, dish.tags, dish.image]);
+    await pool.query(insertDish, [categoryId, dish.name, dish.tags, dish.image, dish.description]);
   }
 }
 

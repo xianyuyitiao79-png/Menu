@@ -132,7 +132,7 @@ export default function OrderConfirmPage() {
 
     try {
       setSubmitting(true);
-      placeOrder({
+      const created = await placeOrder({
         items: items
           .filter((item) => item.quantity > 0)
           .map((item) => ({
@@ -144,6 +144,9 @@ export default function OrderConfirmPage() {
           })),
         note: note.trim() ? note.trim() : undefined
       });
+      if (!created) {
+        throw new Error("create_failed");
+      }
       navigate("/", { state: { tab: "mine" } });
     } catch (error) {
       alert("下单失败，请稍后再试");

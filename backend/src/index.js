@@ -45,13 +45,13 @@ app.get("/api/dishes", async (req, res, next) => {
     const { categoryId } = req.query;
     if (categoryId) {
       const result = await db.query(
-        "SELECT id, category_id as \"categoryId\", name, tags, image FROM dishes WHERE category_id = $1 ORDER BY id",
+        "SELECT id, category_id as \"categoryId\", name, tags, image, description FROM dishes WHERE category_id = $1 ORDER BY id",
         [Number(categoryId)]
       );
       return res.json(result.rows);
     }
     const result = await db.query(
-      "SELECT id, category_id as \"categoryId\", name, tags, image FROM dishes ORDER BY id"
+      "SELECT id, category_id as \"categoryId\", name, tags, image, description FROM dishes ORDER BY id"
     );
     res.json(result.rows);
   } catch (error) {
@@ -157,6 +157,64 @@ app.patch("/api/orders/:id/status", async (req, res, next) => {
       [Number(id)]
     );
     res.json(orderRes.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/dishes", async (req, res, next) => {
+  try {
+    const { categoryId, name, tags, image, description } = req.body || {};
+    if (!name || !categoryId) {
+      return res.status(400).json({ message: "name 和 categoryId 必填" });
+    }
+    const db = getDb();
+    const result = await db.query(
+      "INSERT INTO dishes (category_id, name, tags, image, description) VALUES ($1, $2, $3, $4, $5) RETURNING id, category_id as \"categoryId\", name, tags, image, description",
+      [Number(categoryId), name, tags || "", image || "", description || ""]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/dishes/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, tags, image, description, categoryId } = req.body || {};
+    const db = getDb();
+    const existing = await db.query(
+      "SELECT id, category_id as \"categoryId\", name, tags, image, description FROM dishes WHERE id = $1",
+      [Number(id)]
+    );
+    if (!existing.rows.length) {
+      return res.status(404).json({ message: "菜品不存在" });
+    }
+    const current = existing.rows[0];
+    const next = {
+      name: name ?? current.name,
+      tags: tags ?? current.tags,
+      image: image ?? current.image,
+      description: description ?? current.description,
+      categoryId: categoryId ?? current.categoryId
+    };
+    const result = await db.query(
+      "UPDATE dishes SET category_id = $1, name = $2, tags = $3, image = $4, description = $5 WHERE id = $6 RETURNING id, category_id as \"categoryId\", name, tags, image, description",
+      [Number(next.categoryId), next.name, next.tags, next.image, next.description, Number(id)]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/dishes/:id", async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const db = getDb();
+    await db.query("DELETE FROM dishes WHERE id = $1", [Number(id)]);
+    res.json({ ok: true });
   } catch (error) {
     next(error);
   }

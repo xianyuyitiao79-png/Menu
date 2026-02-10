@@ -16,6 +16,7 @@ export default function MenuManagePanel() {
   const [draft, setDraft] = useState(() => ({ ...emptyDraft }));
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [searching, setSearching] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const categoryMap = useMemo(() => {
     return categories.reduce<Record<number, string>>((acc, item) => {
@@ -42,15 +43,20 @@ export default function MenuManagePanel() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!draft.name.trim()) return;
-    if (editingId) {
-      updateMenuItem(editingId, { ...draft, name: draft.name.trim() });
-    } else {
-      addMenuItem({ ...draft, name: draft.name.trim() });
+    setSaving(true);
+    try {
+      if (editingId) {
+        await updateMenuItem(editingId, { ...draft, name: draft.name.trim() });
+      } else {
+        await addMenuItem({ ...draft, name: draft.name.trim() });
+      }
+      setEditingId(null);
+      setEditorOpen(false);
+    } finally {
+      setSaving(false);
     }
-    setEditingId(null);
-    setEditorOpen(false);
   };
 
   const handleCancel = () => {
@@ -199,9 +205,10 @@ export default function MenuManagePanel() {
             <button
               type="button"
               onClick={handleSave}
+              disabled={saving}
               className="rounded-full border border-[#F6C1CC] bg-[#FFCFD0] px-3 py-1 text-[11px] font-semibold text-white"
             >
-              保存
+              {saving ? "保存中..." : "保存"}
             </button>
           </div>
         </div>

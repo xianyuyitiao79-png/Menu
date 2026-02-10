@@ -70,3 +70,46 @@ export async function updateOrderStatus(id: number, status: string) {
   if (!res.ok) throw new Error("更新失败");
   return res.json();
 }
+
+export async function createDish(payload: {
+  categoryId: number;
+  name: string;
+  tags?: string;
+  image?: string;
+  description?: string;
+}) {
+  const res = await fetch(withBase("/api/dishes"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("创建失败");
+  return res.json();
+}
+
+export async function updateDish(
+  id: number,
+  payload: Partial<{
+    categoryId: number;
+    name: string;
+    tags: string;
+    image: string;
+    description: string;
+  }>
+) {
+  const res = await fetch(withBase(`/api/dishes/${id}`), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("更新失败");
+  return res.json();
+}
+
+export async function deleteDish(id: number) {
+  const res = await fetch(withBase(`/api/dishes/${id}`), {
+    method: "DELETE"
+  });
+  if (!res.ok) throw new Error("删除失败");
+  return res.json();
+}

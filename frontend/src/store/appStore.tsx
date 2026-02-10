@@ -8,8 +8,17 @@ import {
   type ReactNode
 } from "react";
 import type { StoredOrder, StoredOrderItem, StoredOrderStatus } from "../lib/orders";
-import { loadOrders, saveOrders } from "../lib/orders";
-import type { Dish } from "../lib/api";
+import type { Dish, Order } from "../lib/api";
+import {
+  createDish,
+  createOrder,
+  deleteDish,
+  getCategories,
+  getDishes,
+  getOrders,
+  updateDish,
+  updateOrderStatus as updateOrderStatusApi
+} from "../lib/api";
 
 type UserRole = "girlfriend_view" | "boyfriend_admin";
 
@@ -44,16 +53,19 @@ type StoreContextValue = {
     setUserRole: (role: UserRole) => void;
     addMessage: (input: { sender: Message["sender"]; text: string }) => void;
     setAvatar: (role: UserRole, value: string | null) => void;
-    placeOrder: (input: { items: StoredOrderItem[]; note?: string }) => StoredOrder | null;
+    placeOrder: (
+      input: { items: StoredOrderItem[]; note?: string }
+    ) => Promise<StoredOrder | null>;
     updateOrderStatus: (
       orderId: string,
       status: StoredOrderStatus,
       options?: { notify?: boolean }
-    ) => void;
+    ) => Promise<void>;
     adjustOrderItemQty: (orderId: string, dishId: number, delta: number) => void;
-    addMenuItem: (input: Omit<MenuItem, "id">) => void;
-    updateMenuItem: (id: number, patch: Partial<MenuItem>) => void;
-    deleteMenuItem: (id: number) => void;
+    addMenuItem: (input: Omit<MenuItem, "id">) => Promise<MenuItem | null>;
+    updateMenuItem: (id: number, patch: Partial<MenuItem>) => Promise<MenuItem | null>;
+    deleteMenuItem: (id: number) => Promise<boolean>;
+    setRemoteData: (input: { categories?: Category[]; menuList?: MenuItem[] }) => void;
   };
 };
 
@@ -194,7 +206,7 @@ function loadState(): AppState {
       userRole: stored.userRole === "boyfriend_admin" ? "boyfriend_admin" : "girlfriend_view",
       categories: normalizeCategories(stored.categories) || defaultCategories,
       menuList: normalizeMenuList(stored.menuList) || defaultMenuList,
-      orders: Array.isArray(stored.orders) ? stored.orders : loadOrders(),
+      orders: [],
       messages: normalizeMessages(stored.messages) || defaultMessages,
       avatars: typeof stored.avatars === "object" && stored.avatars ? stored.avatars : {}
     };
@@ -217,7 +229,7 @@ function loadState(): AppState {
 
   return {
     ...defaultState,
-    orders: loadOrders(),
+    orders: [],
     messages: legacy.length ? legacy : defaultMessages,
     avatars: legacyAvatars
   };
@@ -226,7 +238,14 @@ function loadState(): AppState {
 function saveState(state: AppState) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const payload = {
+      userRole: state.userRole,
+      categories: state.categories,
+      menuList: state.menuList,
+      messages: state.messages,
+      avatars: state.avatars
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {
     // ignore localStorage errors
   }
@@ -245,6 +264,46 @@ function getStatusMessage(status: StoredOrderStatus) {
   }
 }
 
+const STATUS_FROM_API: Record<string, StoredOrderStatus> = {
+  new: "未接单",
+  seen: "已接单",
+  cooking: "烹饪中",
+  done: "完成"
+};
+
+const STATUS_TO_API: Record<StoredOrderStatus, string> = {
+  未接单: "new",
+  已接单: "seen",
+  烹饪中: "cooking",
+  完成: "done"
+};
+
+function mapStatusToApi(status: StoredOrderStatus) {
+  return STATUS_TO_API[status] ?? null;
+}
+
+function mapApiOrderToStored(order: Order, menuList: MenuItem[]): StoredOrder {
+  const dishMap = new Map(menuList.map((item) => [item.id, item]));
+  const items = (order.items || []).map((item) => {
+    const dish = dishMap.get(item.dishId);
+    return {
+      dishId: item.dishId,
+      quantity: item.quantity,
+      name: item.name ?? dish?.name ?? "",
+      image: dish?.image ?? "",
+      description: dish?.description ?? ""
+    };
+  });
+  return {
+    id: String(order.id),
+    orderNo: String(order.id).padStart(3, "0"),
+    createdAt: order.createdAt,
+    status: STATUS_FROM_API[order.status] ?? "未接单",
+    items,
+    note: order.note
+  };
+}
+
 const AppStoreContext = createContext<StoreContextValue | null>(null);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
@@ -252,8 +311,36 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     saveState(state);
-    saveOrders(state.orders);
   }, [state]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadRemote() {
+      try {
+        const [categories, dishes] = await Promise.all([getCategories(), getDishes()]);
+        if (!active) return;
+        setState((prev) => ({
+          ...prev,
+          categories: categories.length ? categories : prev.categories,
+          menuList: dishes.length ? dishes : prev.menuList
+        }));
+        const orders = await getOrders();
+        if (!active) return;
+        setState((prev) => ({
+          ...prev,
+          orders: orders.map((order) =>
+            mapApiOrderToStored(order, dishes.length ? dishes : prev.menuList)
+          )
+        }));
+      } catch {
+        // ignore remote load failures
+      }
+    }
+    loadRemote();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const setUserRole = useCallback((role: UserRole) => {
     setState((prev) => ({ ...prev, userRole: role }));
@@ -285,53 +372,55 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const placeOrder = useCallback(
-    (input: { items: StoredOrderItem[]; note?: string }) => {
+    async (input: { items: StoredOrderItem[]; note?: string }) => {
       if (!input.items.length) return null;
-      let created: StoredOrder | null = null;
-      setState((prev) => {
-        const nextNumber =
-          prev.orders.reduce((max, order) => {
-            const parsed = Number(order.orderNo);
-            if (Number.isFinite(parsed)) {
-              return Math.max(max, parsed);
-            }
-            return max;
-          }, 0) + 1;
-        const order: StoredOrder = {
-          id: `o-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
-          orderNo: String(nextNumber).padStart(3, "0"),
-          createdAt: new Date().toISOString(),
-          status: "未接单",
-          items: input.items,
+      try {
+        const created = await createOrder({
+          items: input.items.map((item) => ({
+            dishId: item.dishId,
+            quantity: item.quantity
+          })),
           note: input.note
-        };
-        created = order;
-        return { ...prev, orders: [order, ...prev.orders] };
-      });
-      return created;
+        });
+        const stored = mapApiOrderToStored(created, state.menuList);
+        const orders = await getOrders();
+        setState((prev) => ({
+          ...prev,
+          orders: orders.map((order) => mapApiOrderToStored(order, prev.menuList))
+        }));
+        return stored;
+      } catch {
+        return null;
+      }
     },
-    []
+    [state.menuList]
   );
 
   const updateOrderStatus = useCallback(
-    (orderId: string, status: StoredOrderStatus, options?: { notify?: boolean }) => {
-      setState((prev) => {
-        const nextOrders = prev.orders.map((order) =>
-          order.id === orderId ? { ...order, status } : order
-        );
-        const nextMessages = options?.notify
-          ? [
-              ...prev.messages,
-              {
-                id: `m-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
-                sender: "him",
-                text: getStatusMessage(status),
-                createdAt: new Date().toISOString()
-              }
-            ]
-          : prev.messages;
-        return { ...prev, orders: nextOrders, messages: nextMessages };
-      });
+    async (orderId: string, status: StoredOrderStatus, options?: { notify?: boolean }) => {
+      const apiStatus = mapStatusToApi(status);
+      if (!apiStatus) return;
+      try {
+        await updateOrderStatusApi(Number(orderId), apiStatus);
+        const nextOrders = await getOrders();
+        setState((prev) => {
+          const merged = nextOrders.map((order) => mapApiOrderToStored(order, prev.menuList));
+          const nextMessages = options?.notify
+            ? [
+                ...prev.messages,
+                {
+                  id: `m-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
+                  sender: "him",
+                  text: getStatusMessage(status),
+                  createdAt: new Date().toISOString()
+                }
+              ]
+            : prev.messages;
+          return { ...prev, orders: merged, messages: nextMessages };
+        });
+      } catch {
+        // ignore update failures
+      }
     },
     []
   );
@@ -352,36 +441,86 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addMenuItem = useCallback((input: Omit<MenuItem, "id">) => {
-    setState((prev) => {
-      const nextId =
-        prev.menuList.reduce((max, item) => Math.max(max, item.id), 0) + 1;
-      const newItem: MenuItem = { ...input, id: nextId };
-      return { ...prev, menuList: [newItem, ...prev.menuList] };
-    });
-  }, []);
+  const addMenuItem = useCallback(
+    async (input: Omit<MenuItem, "id">) => {
+      try {
+        const created = await createDish({
+          categoryId: input.categoryId,
+          name: input.name,
+          tags: input.tags,
+          image: input.image,
+          description: input.description
+        });
+        setState((prev) => ({ ...prev, menuList: [created, ...prev.menuList] }));
+        return created;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
 
-  const updateMenuItem = useCallback((id: number, patch: Partial<MenuItem>) => {
-    setState((prev) => ({
-      ...prev,
-      menuList: prev.menuList.map((item) => (item.id === id ? { ...item, ...patch } : item)),
-      orders: Object.prototype.hasOwnProperty.call(patch, "image")
-        ? prev.orders.map((order) => ({
+  const updateMenuItem = useCallback(
+    async (id: number, patch: Partial<MenuItem>) => {
+      try {
+        const updated = await updateDish(id, {
+          categoryId: patch.categoryId,
+          name: patch.name,
+          tags: patch.tags,
+          image: patch.image,
+          description: patch.description
+        });
+        setState((prev) => ({
+          ...prev,
+          menuList: prev.menuList.map((item) => (item.id === id ? updated : item)),
+          orders: prev.orders.map((order) => ({
             ...order,
             items: order.items.map((item) =>
-              item.dishId === id ? { ...item, image: patch.image } : item
+              item.dishId === id
+                ? {
+                    ...item,
+                    name: updated.name,
+                    image: updated.image,
+                    description: updated.description
+                  }
+                : item
             )
           }))
-        : prev.orders
-    }));
-  }, []);
+        }));
+        return updated;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
 
-  const deleteMenuItem = useCallback((id: number) => {
-    setState((prev) => ({
-      ...prev,
-      menuList: prev.menuList.filter((item) => item.id !== id)
-    }));
-  }, []);
+  const deleteMenuItem = useCallback(
+    async (id: number) => {
+      try {
+        await deleteDish(id);
+        setState((prev) => ({
+          ...prev,
+          menuList: prev.menuList.filter((item) => item.id !== id)
+        }));
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    []
+  );
+
+  const setRemoteData = useCallback(
+    (input: { categories?: Category[]; menuList?: MenuItem[] }) => {
+      setState((prev) => ({
+        ...prev,
+        categories: input.categories ?? prev.categories,
+        menuList: input.menuList ?? prev.menuList
+      }));
+    },
+    []
+  );
 
   const value = useMemo(
     () => ({
@@ -395,7 +534,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         adjustOrderItemQty,
         addMenuItem,
         updateMenuItem,
-        deleteMenuItem
+        deleteMenuItem,
+        setRemoteData
       }
     }),
     [
@@ -408,7 +548,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       adjustOrderItemQty,
       addMenuItem,
       updateMenuItem,
-      deleteMenuItem
+      deleteMenuItem,
+      setRemoteData
     ]
   );
 

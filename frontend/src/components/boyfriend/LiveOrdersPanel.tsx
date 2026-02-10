@@ -15,14 +15,14 @@ export default function LiveOrdersPanel() {
     setIndex((prev) => (prev + 1) % activeOrders.length);
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     if (!activeOrder) return;
-    updateOrderStatus(activeOrder.id, "已接单", { notify: true });
+    await updateOrderStatus(activeOrder.id, "已接单", { notify: true });
   };
 
-  const handleStatus = (status: (typeof statusSteps)[number]) => {
+  const handleStatus = async (status: (typeof statusSteps)[number]) => {
     if (!activeOrder) return;
-    updateOrderStatus(activeOrder.id, status, { notify: status !== activeOrder.status });
+    await updateOrderStatus(activeOrder.id, status, { notify: status !== activeOrder.status });
   };
 
   return (
