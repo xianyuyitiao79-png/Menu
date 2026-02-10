@@ -535,6 +535,13 @@ export default function MenuPage() {
                     ? "rgba(193, 123, 138, 0.12)"
                     : "rgba(184, 147, 110, 0.12)";
                   const tagColor = isFavorite ? "#C17B8A" : "#B8936E";
+                  const imageSrc =
+                    typeof dish.image === "string" &&
+                    (dish.image.startsWith("data:image") ||
+                      dish.image.startsWith("http://") ||
+                      dish.image.startsWith("https://"))
+                      ? dish.image
+                      : "";
 
                   return (
                     <div
@@ -558,6 +565,7 @@ export default function MenuPage() {
                           background: isSelected ? "#FFEEF0" : "white",
                           borderRadius: 9,
                           border: isSelected ? "1px solid #FFCFD0" : "1px solid #DEDEE2",
+                          overflow: "hidden",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
@@ -566,15 +574,19 @@ export default function MenuPage() {
                           fontFamily: "Helvetica"
                         }}
                       >
-                        {dish.image ? (
+                        {imageSrc ? (
                           <img
-                            src={dish.image}
+                            src={imageSrc}
                             alt={dish.name}
                             style={{
                               width: "100%",
                               height: "100%",
                               objectFit: "cover",
                               borderRadius: 8
+                            }}
+                            onError={(event) => {
+                              const target = event.currentTarget;
+                              target.style.display = "none";
                             }}
                           />
                         ) : (
