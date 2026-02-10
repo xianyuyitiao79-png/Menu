@@ -17,79 +17,20 @@ export type StoredOrder = {
   note?: string;
 };
 
-const ORDERS_KEY = "myOrders";
-
-function isValidOrderItem(value: any): value is StoredOrderItem {
-  return (
-    value &&
-    typeof value === "object" &&
-    typeof value.dishId === "number" &&
-    typeof value.quantity === "number"
-  );
-}
-
-function isValidOrder(value: any): value is StoredOrder {
-  return (
-    value &&
-    typeof value === "object" &&
-    typeof value.id === "string" &&
-    typeof value.orderNo === "string" &&
-    typeof value.createdAt === "string" &&
-    (value.status === "未接单" ||
-      value.status === "已接单" ||
-      value.status === "烹饪中" ||
-      value.status === "完成") &&
-    Array.isArray(value.items) &&
-    value.items.every(isValidOrderItem)
-  );
-}
-
 export function loadOrders(): StoredOrder[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(ORDERS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isValidOrder);
-  } catch {
-    return [];
-  }
+  return [];
 }
 
-export function saveOrders(orders: StoredOrder[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  } catch {
-    // ignore localStorage errors
-  }
+export function saveOrders(_orders: StoredOrder[]) {
+  // no-op: orders are stored in the database
 }
 
-export function addOrder(input: {
+export function addOrder(_input: {
   items: StoredOrderItem[];
   note?: string;
   status?: StoredOrderStatus;
 }): StoredOrder {
-  const existing = loadOrders();
-  const nextNumber =
-    existing.reduce((max, order) => {
-      const parsed = Number(order.orderNo);
-      if (Number.isFinite(parsed)) {
-        return Math.max(max, parsed);
-      }
-      return max;
-    }, 0) + 1;
-  const order: StoredOrder = {
-    id: `o-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
-    orderNo: String(nextNumber).padStart(3, "0"),
-    createdAt: new Date().toISOString(),
-    status: input.status ?? "未接单",
-    items: input.items,
-    note: input.note
-  };
-  saveOrders([order, ...existing]);
-  return order;
+  throw new Error("addOrder is deprecated. Use API-backed order creation.");
 }
 
 export function formatOrderTime(isoString: string): string {

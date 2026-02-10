@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode
 } from "react";
@@ -47,6 +48,8 @@ type AppState = {
   orders: StoredOrder[];
   messages: Message[];
   avatars: Partial<Record<UserRole, string>>;
+  isLoading: boolean;
+  loadError: string | null;
 };
 
 type StoreContextValue = {
@@ -68,6 +71,7 @@ type StoreContextValue = {
     updateMenuItem: (id: number, patch: Partial<MenuItem>) => Promise<MenuItem | null>;
     deleteMenuItem: (id: number) => Promise<boolean>;
     setRemoteData: (input: { categories?: Category[]; menuList?: MenuItem[] }) => void;
+    refreshData: () => Promise<void>;
   };
 };
 
@@ -103,7 +107,9 @@ const defaultState: AppState = {
   menuList: defaultMenuList,
   orders: [],
   messages: defaultMessages,
-  avatars: {}
+  avatars: {},
+  isLoading: false,
+  loadError: null
 };
 
 function loadState(): AppState {
@@ -167,47 +173,57 @@ const AppStoreContext = createContext<StoreContextValue | null>(null);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => loadState());
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let active = true;
-    async function loadRemote() {
-      try {
-        const [categories, dishes, avatars] = await Promise.all([
-          getCategories(),
-          getDishes(),
-          getAvatars()
-        ]);
-        if (!active) return;
-        setState((prev) => ({
-          ...prev,
-          categories,
-          menuList: dishes,
-          avatars:
-            avatars && avatars.length
-              ? avatars.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
-                  if (item?.role) {
-                    acc[item.role as UserRole] = item.avatar ?? "";
-                  }
-                  return acc;
-                }, {})
-              : {}
-        }));
-        const orders = await getOrders();
-        if (!active) return;
-        setState((prev) => ({
-          ...prev,
-          orders: orders.map((order) =>
-            mapApiOrderToStored(order, dishes)
-          )
-        }));
-      } catch {
-        // ignore remote load failures
-      }
-    }
-    loadRemote();
     return () => {
-      active = false;
+      mountedRef.current = false;
     };
+  }, []);
+
+  const refreshData = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, loadError: null }));
+    try {
+      const [categories, dishes, avatars] = await Promise.all([
+        getCategories(),
+        getDishes(),
+        getAvatars()
+      ]);
+      if (!mountedRef.current) return;
+      setState((prev) => ({
+        ...prev,
+        categories,
+        menuList: dishes,
+        avatars:
+          avatars && avatars.length
+            ? avatars.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
+                if (item?.role) {
+                  acc[item.role as UserRole] = item.avatar ?? "";
+                }
+                return acc;
+              }, {})
+            : {},
+        isLoading: false,
+        loadError: null
+      }));
+      const orders = await getOrders();
+      if (!mountedRef.current) return;
+      setState((prev) => ({
+        ...prev,
+        orders: orders.map((order) => mapApiOrderToStored(order, dishes))
+      }));
+    } catch {
+      if (!mountedRef.current) return;
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        loadError: "加载失败，请刷新页面重试"
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshData();
   }, []);
 
   const setUserRole = useCallback((role: UserRole) => {
@@ -406,7 +422,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         addMenuItem,
         updateMenuItem,
         deleteMenuItem,
-        setRemoteData
+        setRemoteData,
+        refreshData
       }
     }),
     [
@@ -420,7 +437,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       addMenuItem,
       updateMenuItem,
       deleteMenuItem,
-      setRemoteData
+      setRemoteData,
+      refreshData
     ]
   );
 

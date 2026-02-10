@@ -30,8 +30,18 @@ type ChatMessage = {
 export default function MenuPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { categories, menuList, orders, messages, addMessage, avatars, setAvatar } =
-    useAppStore();
+  const {
+    categories,
+    menuList,
+    orders,
+    messages,
+    addMessage,
+    avatars,
+    setAvatar,
+    isLoading,
+    loadError,
+    refreshData
+  } = useAppStore();
   const dishes = menuList;
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [cart, setCart] = useState<Record<number, { dish: Dish; qty: number }>>({});
@@ -354,72 +364,89 @@ export default function MenuPage() {
               className="glass-scroll"
             >
               <div className="flex flex-col items-center gap-3">
-                {categoryButtons.map((cat) => {
-                  const active = activeCategory === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
-                      style={{
-                        width: 60,
-                        height: cat.height,
-                        position: "relative",
-                        background: active ? "#FFEEF0" : "transparent",
-                        borderRadius: 12,
-                        border: active ? "1px solid #FFCFD0" : "none",
-                        cursor: "pointer"
-                      }}
-                    >
-                      {active && (
+                {categoryButtons.length === 0 ? (
+                  <div
+                    style={{
+                      width: 60,
+                      height: 80,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#B39BA0",
+                      fontSize: 12,
+                      textAlign: "center"
+                    }}
+                  >
+                    {isLoading ? "加载中" : "暂无分类"}
+                  </div>
+                ) : (
+                  categoryButtons.map((cat) => {
+                    const active = activeCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        style={{
+                          width: 60,
+                          height: cat.height,
+                          position: "relative",
+                          background: active ? "#FFEEF0" : "transparent",
+                          borderRadius: 12,
+                          border: active ? "1px solid #FFCFD0" : "none",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {active && (
+                          <div
+                            style={{
+                              width: 3,
+                              height: 24,
+                              left: -1,
+                              top: 30,
+                              position: "absolute",
+                              background: "#F6C1CC",
+                              borderTopRightRadius: 9999,
+                              borderBottomRightRadius: 9999
+                            }}
+                          />
+                        )}
                         <div
                           style={{
-                            width: 3,
-                            height: 24,
-                            left: -1,
-                            top: 30,
+                            width: "100%",
                             position: "absolute",
-                            background: "#F6C1CC",
-                            borderTopRightRadius: 9999,
-                            borderBottomRightRadius: 9999
+                            top: 15,
+                            left: 0,
+                            textAlign: "center",
+                            fontSize: 20,
+                            fontFamily: "Helvetica",
+                            fontWeight: 400,
+                            lineHeight: "30px",
+                            color: "black"
                           }}
-                        />
-                      )}
-                      <div
-                        style={{
-                          width: "100%",
-                          position: "absolute",
-                          top: 15,
-                          left: 0,
-                          textAlign: "center",
-                          fontSize: 20,
-                          fontFamily: "Helvetica",
-                          fontWeight: 400,
-                          lineHeight: "30px",
-                          color: "black"
-                        }}
-                      >
-                        {cat.emoji}
-                      </div>
-                      <div
-                        style={{
-                          width: "100%",
-                          position: "absolute",
-                          top: 52,
-                          left: 0,
-                          textAlign: "center",
-                          fontSize: 13,
-                          fontFamily: "Helvetica",
-                          fontWeight: 400,
-                          lineHeight: "16.9px",
-                          letterSpacing: "0.32px",
-                          color: active ? "#5A4A4E" : "#8B7B7E"
-                        }}
-                      >
-                        {cat.label}
-                      </div>
-                    </button>
-                  );
-                })}
+                        >
+                          {cat.emoji}
+                        </div>
+                        <div
+                          style={{
+                            width: "100%",
+                            position: "absolute",
+                            top: 52,
+                            left: 0,
+                            textAlign: "center",
+                            fontSize: 13,
+                            fontFamily: "Helvetica",
+                            fontWeight: 400,
+                            lineHeight: "16.9px",
+                            letterSpacing: "0.32px",
+                            color: active ? "#5A4A4E" : "#8B7B7E"
+                          }}
+                        >
+                          {cat.label}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -439,7 +466,66 @@ export default function MenuPage() {
               className="menu-scroll glass-scroll"
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {filteredDishes.map((dish) => {
+                {loadError && (
+                  <div
+                    style={{
+                      padding: 12,
+                      borderRadius: 12,
+                      background: "rgba(255,255,255,0.9)",
+                      border: "1px solid rgba(237,231,233,0.8)",
+                      color: "#C17B8A",
+                      fontSize: 12,
+                      textAlign: "center"
+                    }}
+                  >
+                    {loadError}
+                    <button
+                      onClick={refreshData}
+                      style={{
+                        marginLeft: 8,
+                        border: "1px solid #F6C1CC",
+                        background: "#FFEEF0",
+                        borderRadius: 999,
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        color: "#C17B8A",
+                        cursor: "pointer"
+                      }}
+                    >
+                      重新加载
+                    </button>
+                  </div>
+                )}
+                {isLoading && filteredDishes.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 16,
+                      border: "1px dashed rgba(246,193,204,0.6)",
+                      background: "rgba(255,255,255,0.85)",
+                      color: "#B39BA0",
+                      textAlign: "center",
+                      fontSize: 12
+                    }}
+                  >
+                    菜单加载中...
+                  </div>
+                ) : filteredDishes.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 16,
+                      borderRadius: 16,
+                      border: "1px dashed rgba(246,193,204,0.6)",
+                      background: "rgba(255,255,255,0.85)",
+                      color: "#B39BA0",
+                      textAlign: "center",
+                      fontSize: 12
+                    }}
+                  >
+                    暂无菜品
+                  </div>
+                ) : (
+                  filteredDishes.map((dish) => {
                   const isFavorite = dish.tags?.includes("她最爱");
                   const isSignature = dish.tags?.includes("招牌");
                   const isSelected = Boolean(cart[dish.id]);
@@ -554,7 +640,8 @@ export default function MenuPage() {
                       </button>
                     </div>
                   );
-                })}
+                  })
+                )}
               </div>
             </div>
 
