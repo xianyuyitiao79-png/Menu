@@ -64,6 +64,33 @@ app.get("/api/dishes", async (req, res, next) => {
   }
 });
 
+app.get("/api/avatars", async (_req, res, next) => {
+  try {
+    const db = getDb();
+    const result = await db.query("SELECT role, avatar FROM avatars ORDER BY role");
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/avatars", async (req, res, next) => {
+  try {
+    const { role, avatar } = req.body || {};
+    if (!role) {
+      return res.status(400).json({ message: "role 必填" });
+    }
+    const db = getDb();
+    const result = await db.query(
+      "INSERT INTO avatars (role, avatar, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (role) DO UPDATE SET avatar = $2, updated_at = NOW() RETURNING role, avatar",
+      [role, avatar ?? ""]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/orders", async (req, res, next) => {
   const { items, note } = req.body || {};
   if (!Array.isArray(items) || items.length === 0) {

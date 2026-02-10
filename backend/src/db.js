@@ -40,6 +40,12 @@ async function initSchema() {
       name TEXT NOT NULL,
       quantity INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS avatars (
+      role TEXT PRIMARY KEY,
+      avatar TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await pool.query("ALTER TABLE dishes ADD COLUMN IF NOT EXISTS description TEXT");

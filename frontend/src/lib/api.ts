@@ -26,6 +26,11 @@ export type Order = {
   items: OrderItem[];
 };
 
+export type AvatarRecord = {
+  role: string;
+  avatar?: string;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 function withBase(path: string) {
@@ -111,5 +116,20 @@ export async function deleteDish(id: number) {
     method: "DELETE"
   });
   if (!res.ok) throw new Error("删除失败");
+  return res.json();
+}
+
+export async function getAvatars(): Promise<AvatarRecord[]> {
+  const res = await fetch(withBase("/api/avatars"));
+  return res.json();
+}
+
+export async function setAvatar(payload: { role: string; avatar?: string | null }) {
+  const res = await fetch(withBase("/api/avatars"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error("更新头像失败");
   return res.json();
 }

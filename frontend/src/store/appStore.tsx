@@ -13,9 +13,11 @@ import {
   createDish,
   createOrder,
   deleteDish,
+  getAvatars,
   getCategories,
   getDishes,
   getOrders,
+  setAvatar as setAvatarApi,
   updateDish,
   updateOrderStatus as updateOrderStatusApi
 } from "../lib/api";
@@ -317,12 +319,25 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     let active = true;
     async function loadRemote() {
       try {
-        const [categories, dishes] = await Promise.all([getCategories(), getDishes()]);
+        const [categories, dishes, avatars] = await Promise.all([
+          getCategories(),
+          getDishes(),
+          getAvatars()
+        ]);
         if (!active) return;
         setState((prev) => ({
           ...prev,
           categories: categories.length ? categories : prev.categories,
-          menuList: dishes.length ? dishes : prev.menuList
+          menuList: dishes.length ? dishes : prev.menuList,
+          avatars:
+            avatars && avatars.length
+              ? avatars.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
+                  if (item?.role) {
+                    acc[item.role as UserRole] = item.avatar ?? "";
+                  }
+                  return acc;
+                }, {})
+              : prev.avatars
         }));
         const orders = await getOrders();
         if (!active) return;
@@ -369,6 +384,9 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         [role]: value ?? ""
       }
     }));
+    void setAvatarApi({ role, avatar: value ?? "" }).catch(() => {
+      // ignore avatar sync failures
+    });
   }, []);
 
   const placeOrder = useCallback(
