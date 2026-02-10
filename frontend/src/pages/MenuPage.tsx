@@ -372,78 +372,84 @@ export default function MenuPage() {
                 top: 159,
                 position: "absolute",
                 background: "#FFF8F5",
-                borderRight: "1px solid #EDE7E9"
+                borderRight: "1px solid #EDE7E9",
+                overflowY: "auto",
+                paddingTop: 12,
+                paddingBottom: 12,
+                boxSizing: "border-box",
+                ["--scrollbar-track-margin" as any]: "12px"
               }}
-            />
-
-            {categoryButtons.map((cat) => {
-              const active = activeCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  style={{
-                    width: 60,
-                    height: cat.height,
-                    left: 8,
-                    top: cat.top,
-                    position: "absolute",
-                    background: active ? "#FFEEF0" : "transparent",
-                    borderRadius: 12,
-                    border: active ? "1px solid #FFCFD0" : "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  {active && (
-                    <div
+              className="glass-scroll"
+            >
+              <div className="flex flex-col items-center gap-3">
+                {categoryButtons.map((cat) => {
+                  const active = activeCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
                       style={{
-                        width: 3,
-                        height: 24,
-                        left: -1,
-                        top: 30,
-                        position: "absolute",
-                        background: "#F6C1CC",
-                        borderTopRightRadius: 9999,
-                        borderBottomRightRadius: 9999
+                        width: 60,
+                        height: cat.height,
+                        position: "relative",
+                        background: active ? "#FFEEF0" : "transparent",
+                        borderRadius: 12,
+                        border: active ? "1px solid #FFCFD0" : "none",
+                        cursor: "pointer"
                       }}
-                    />
-                  )}
-                  <div
-                    style={{
-                      width: "100%",
-                      position: "absolute",
-                      top: 15,
-                      left: 0,
-                      textAlign: "center",
-                      fontSize: 20,
-                      fontFamily: "Helvetica",
-                      fontWeight: 400,
-                      lineHeight: "30px",
-                      color: "black"
-                    }}
-                  >
-                    {cat.emoji}
-                  </div>
-                  <div
-                    style={{
-                      width: "100%",
-                      position: "absolute",
-                      top: 52,
-                      left: 0,
-                      textAlign: "center",
-                      fontSize: 13,
-                      fontFamily: "Helvetica",
-                      fontWeight: 400,
-                      lineHeight: "16.9px",
-                      letterSpacing: "0.32px",
-                      color: active ? "#5A4A4E" : "#8B7B7E"
-                    }}
-                  >
-                    {cat.label}
-                  </div>
-                </button>
-              );
-            })}
+                    >
+                      {active && (
+                        <div
+                          style={{
+                            width: 3,
+                            height: 24,
+                            left: -1,
+                            top: 30,
+                            position: "absolute",
+                            background: "#F6C1CC",
+                            borderTopRightRadius: 9999,
+                            borderBottomRightRadius: 9999
+                          }}
+                        />
+                      )}
+                      <div
+                        style={{
+                          width: "100%",
+                          position: "absolute",
+                          top: 15,
+                          left: 0,
+                          textAlign: "center",
+                          fontSize: 20,
+                          fontFamily: "Helvetica",
+                          fontWeight: 400,
+                          lineHeight: "30px",
+                          color: "black"
+                        }}
+                      >
+                        {cat.emoji}
+                      </div>
+                      <div
+                        style={{
+                          width: "100%",
+                          position: "absolute",
+                          top: 52,
+                          left: 0,
+                          textAlign: "center",
+                          fontSize: 13,
+                          fontFamily: "Helvetica",
+                          fontWeight: 400,
+                          lineHeight: "16.9px",
+                          letterSpacing: "0.32px",
+                          color: active ? "#5A4A4E" : "#8B7B7E"
+                        }}
+                      >
+                        {cat.label}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div
               style={{
