@@ -206,8 +206,8 @@ function loadState(): AppState {
   if (stored) {
     return {
       userRole: stored.userRole === "boyfriend_admin" ? "boyfriend_admin" : "girlfriend_view",
-      categories: normalizeCategories(stored.categories) || defaultCategories,
-      menuList: normalizeMenuList(stored.menuList) || defaultMenuList,
+      categories: defaultCategories,
+      menuList: defaultMenuList,
       orders: [],
       messages: normalizeMessages(stored.messages) || defaultMessages,
       avatars: typeof stored.avatars === "object" && stored.avatars ? stored.avatars : {}
@@ -242,8 +242,6 @@ function saveState(state: AppState) {
   try {
     const payload = {
       userRole: state.userRole,
-      categories: state.categories,
-      menuList: state.menuList,
       messages: state.messages,
       avatars: state.avatars
     };
