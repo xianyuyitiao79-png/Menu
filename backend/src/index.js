@@ -11,7 +11,7 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json({ limit: "20mb" }));
+app.use(express.json({ limit: "50mb" }));
 
 let dbReady = false;
 async function ensureDb() {

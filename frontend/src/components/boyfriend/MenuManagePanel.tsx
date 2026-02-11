@@ -72,9 +72,41 @@ export default function MenuManagePanel() {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setDraft((prev) => ({ ...prev, image: reader.result }));
+    reader.onload = (readerEvent) => {
+      if (typeof readerEvent.target?.result === "string") {
+        const originalBase64 = readerEvent.target.result;
+        const img = new Image();
+        img.onload = () => {
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+            setDraft((prev) => ({ ...prev, image: compressedBase64 }));
+          } else {
+            setDraft((prev) => ({ ...prev, image: originalBase64 }));
+          }
+        };
+        img.src = originalBase64;
       }
     };
     reader.readAsDataURL(file);
