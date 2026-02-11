@@ -47,6 +47,7 @@ export default function MenuPage() {
   const [cart, setCart] = useState<Record<number, { dish: Dish; qty: number }>>({});
   const [activeTab, setActiveTab] = useState<"menu" | "mine">("menu");
   const [brokenImages, setBrokenImages] = useState<Record<number, boolean>>({});
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const defaultPrefs = ["少辣", "不要香菜", "爱甜口", "喜欢汤"];
   const [prefs, setPrefs] = useState<string[]>(defaultPrefs);
   const avatar = avatars.girlfriend_view || null;
@@ -547,6 +548,7 @@ export default function MenuPage() {
                       normalizedImage.startsWith("https://"))
                       ? normalizedImage
                       : "";
+                  const isLoaded = Boolean(loadedImages[dish.id]);
 
                   return (
                     <div
@@ -579,7 +581,7 @@ export default function MenuPage() {
                           fontFamily: "Helvetica"
                         }}
                       >
-                        {imageSrc ? (
+                        {imageSrc && (
                           <img
                             src={imageSrc}
                             alt={dish.name}
@@ -587,15 +589,19 @@ export default function MenuPage() {
                               width: "100%",
                               height: "100%",
                               objectFit: "cover",
-                              borderRadius: 8
+                              borderRadius: 8,
+                              opacity: isLoaded ? 1 : 0,
+                              transition: "opacity 0.2s ease"
+                            }}
+                            onLoad={() => {
+                              setLoadedImages((prev) => ({ ...prev, [dish.id]: true }));
                             }}
                             onError={(event) => {
                               setBrokenImages((prev) => ({ ...prev, [dish.id]: true }));
                             }}
                           />
-                        ) : (
-                          "暂无图片"
                         )}
+                        {!imageSrc || !isLoaded ? "暂无图片" : null}
                       </div>
                       <div
                         style={{
