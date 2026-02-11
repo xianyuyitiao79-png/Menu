@@ -255,9 +255,27 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         [role]: value ?? ""
       }
     }));
-    void setAvatarApi({ role, avatar: value ?? "" }).catch(() => {
-      // ignore avatar sync failures
-    });
+    void (async () => {
+      try {
+        await setAvatarApi({ role, avatar: value ?? "" });
+        const avatarRows = await getAvatars();
+        if (!mountedRef.current) return;
+        setState((prev) => ({
+          ...prev,
+          avatars:
+            avatarRows && avatarRows.length
+              ? avatarRows.reduce<Partial<Record<UserRole, string>>>((acc, item) => {
+                  if (item?.role) {
+                    acc[item.role as UserRole] = item.avatar ?? "";
+                  }
+                  return acc;
+                }, {})
+              : prev.avatars
+        }));
+      } catch {
+        // ignore avatar sync failures
+      }
+    })();
   }, []);
 
   const placeOrder = useCallback(
