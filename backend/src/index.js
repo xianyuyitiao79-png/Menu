@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { initSchema, seedIfEmpty, getDb } = require("./db");
+const { uploadDataUrl } = require("./storage");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -69,6 +70,19 @@ app.get("/api/avatars", async (_req, res, next) => {
     const db = getDb();
     const result = await db.query("SELECT role, avatar FROM avatars ORDER BY role");
     res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/uploads", async (req, res, next) => {
+  try {
+    const { dataUrl, folder } = req.body || {};
+    if (!dataUrl) {
+      return res.status(400).json({ message: "dataUrl 必填" });
+    }
+    const url = await uploadDataUrl(dataUrl, folder || "dishes");
+    res.json({ url });
   } catch (error) {
     next(error);
   }

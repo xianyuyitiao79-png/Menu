@@ -562,31 +562,39 @@ export default function MenuPage() {
                     >
                       <div
                         style={{
-                          width: 74,
-                          height: 74,
-                          left: 12,
-                          top: 13,
+                          width: 56,
+                          height: 56,
+                          left: 16,
+                          top: 22,
                           position: "absolute",
-                          background: isSelected ? "#FFEEF0" : "white",
-                          borderRadius: 9,
-                          border: isSelected ? "1px solid #FFCFD0" : "1px solid #DEDEE2",
+                          background: isSelected ? "#FFEEF0" : "#FFEEF0",
+                          borderRadius: 10,
+                          border: "1px solid rgba(246,193,204,0.6)",
                           overflow: "hidden",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#C4C4C4",
-                          fontSize: 12,
-                          fontFamily: "Helvetica",
-                          backgroundImage: imageSrc ? `url(${imageSrc})` : "none",
-                          backgroundSize: "cover",
-                          backgroundPosition: "center"
+                          fontSize: 11,
+                          fontFamily: "Helvetica"
                         }}
                       >
-                        {imageSrc ? "" : "暂无图片"}
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={dish.name}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            onError={() =>
+                              setBrokenImages((prev) => ({ ...prev, [dish.id]: true }))
+                            }
+                          />
+                        ) : (
+                          "暂无图片"
+                        )}
                       </div>
                       <div
                         style={{
-                          left: 114,
+                          left: 92,
                           top: 26,
                           position: "absolute",
                           color: "#5A4A4E",
@@ -602,7 +610,7 @@ export default function MenuPage() {
                         <div
                           style={{
                             position: "absolute",
-                            left: 200,
+                            left: 176,
                             top: 24,
                             background: tagBg,
                             borderRadius: 8,
@@ -619,7 +627,7 @@ export default function MenuPage() {
                       )}
                       <div
                         style={{
-                          left: 114,
+                          left: 92,
                           top: 54,
                           position: "absolute",
                           color: "#A89B9E",

@@ -133,3 +133,14 @@ export async function setAvatar(payload: { role: string; avatar?: string | null 
   if (!res.ok) throw new Error("更新头像失败");
   return res.json();
 }
+
+export async function uploadImage(dataUrl: string, folder?: string): Promise<string> {
+  const res = await fetch(withBase("/api/uploads"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dataUrl, folder })
+  });
+  if (!res.ok) throw new Error("上传失败");
+  const data = await res.json();
+  return data.url as string;
+}

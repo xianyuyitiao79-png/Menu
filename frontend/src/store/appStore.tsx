@@ -19,6 +19,7 @@ import {
   getDishes,
   getOrders,
   setAvatar as setAvatarApi,
+  uploadImage,
   updateDish,
   updateOrderStatus as updateOrderStatusApi
 } from "../lib/api";
@@ -169,6 +170,16 @@ function mapApiOrderToStored(order: Order, menuList: MenuItem[]): StoredOrder {
   };
 }
 
+async function resolveImageForUpload(image?: string | null, folder = "dishes") {
+  if (!image) return "";
+  const trimmed = image.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("data:image")) {
+    return uploadImage(trimmed, folder);
+  }
+  return trimmed;
+}
+
 const AppStoreContext = createContext<StoreContextValue | null>(null);
 
 export function AppStoreProvider({ children }: { children: ReactNode }) {
@@ -257,7 +268,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     }));
     void (async () => {
       try {
-        await setAvatarApi({ role, avatar: value ?? "" });
+        const avatarUrl = await resolveImageForUpload(value, "avatars");
+        await setAvatarApi({ role, avatar: avatarUrl });
         const avatarRows = await getAvatars();
         if (!mountedRef.current) return;
         setState((prev) => ({
@@ -348,59 +360,63 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addMenuItem = useCallback(
-    async (input: Omit<MenuItem, "id">) => {
-      try {
-        const created = await createDish({
-          categoryId: input.categoryId,
-          name: input.name,
-          tags: input.tags,
-          image: input.image,
-          description: input.description
-        });
-        setState((prev) => ({ ...prev, menuList: [created, ...prev.menuList] }));
-        return created;
-      } catch {
-        return null;
-      }
-    },
-    []
-  );
+  const addMenuItem = useCallback(async (input: Omit<MenuItem, "id">) => {
+    try {
+      const image = await resolveImageForUpload(input.image, "dishes");
+      const created = await createDish({
+        categoryId: input.categoryId,
+        name: input.name,
+        tags: input.tags,
+        image,
+        description: input.description
+      });
+      setState((prev) => ({ ...prev, menuList: [created, ...prev.menuList] }));
+      return created;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const updateMenuItem = useCallback(
-    async (id: number, patch: Partial<MenuItem>) => {
-      try {
-        const updated = await updateDish(id, {
-          categoryId: patch.categoryId,
-          name: patch.name,
-          tags: patch.tags,
-          image: patch.image,
-          description: patch.description
-        });
-        setState((prev) => ({
-          ...prev,
-          menuList: prev.menuList.map((item) => (item.id === id ? updated : item)),
-          orders: prev.orders.map((order) => ({
-            ...order,
-            items: order.items.map((item) =>
-              item.dishId === id
-                ? {
-                    ...item,
-                    name: updated.name,
-                    image: updated.image,
-                    description: updated.description
-                  }
-                : item
-            )
-          }))
-        }));
-        return updated;
-      } catch {
-        return null;
+  const updateMenuItem = useCallback(async (id: number, patch: Partial<MenuItem>) => {
+    try {
+      const updatePayload: Partial<MenuItem> = {
+        categoryId: patch.categoryId,
+        name: patch.name,
+        tags: patch.tags,
+        description: patch.description
+      };
+      if (Object.prototype.hasOwnProperty.call(patch, "image")) {
+        updatePayload.image = await resolveImageForUpload(patch.image ?? "", "dishes");
       }
-    },
-    []
-  );
+      const updated = await updateDish(id, {
+        categoryId: updatePayload.categoryId,
+        name: updatePayload.name,
+        tags: updatePayload.tags,
+        image: updatePayload.image,
+        description: updatePayload.description
+      });
+      setState((prev) => ({
+        ...prev,
+        menuList: prev.menuList.map((item) => (item.id === id ? updated : item)),
+        orders: prev.orders.map((order) => ({
+          ...order,
+          items: order.items.map((item) =>
+            item.dishId === id
+              ? {
+                  ...item,
+                  name: updated.name,
+                  image: updated.image,
+                  description: updated.description
+                }
+              : item
+          )
+        }))
+      }));
+      return updated;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const deleteMenuItem = useCallback(
     async (id: number) => {
