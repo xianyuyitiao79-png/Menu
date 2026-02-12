@@ -8,10 +8,7 @@ import { formatMessageTime, useAppStore } from "../store/appStore";
 const imgFrame = "https://www.figma.com/api/mcp/asset/73d8bdbf-69ae-4735-a992-cb9a722b5ecf";
 const imgFrame2 = "https://www.figma.com/api/mcp/asset/1f3e72a0-ce23-420b-9f01-7157bfdc6cd9";
 const imgRectangle = "https://www.figma.com/api/mcp/asset/68562002-dcdf-462b-8799-3b64a2698793";
-const imgMdiLightClipboardText =
-  "https://www.figma.com/api/mcp/asset/b6466591-a199-45ec-99c7-2e359272c15c";
-const imgVector = "https://www.figma.com/api/mcp/asset/e2dd9ec9-c047-43fa-98b6-11ac39f8d532";
-const imgVector1 = "https://www.figma.com/api/mcp/asset/750b4ede-c927-4584-8497-077fc028bbd4";
+// bottom navigation icons are rendered inline to avoid external hotlink failures
 
 type CategoryButton = {
   id: number;
@@ -1235,33 +1232,47 @@ export default function MenuPage() {
               >
                 点餐
               </div>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -5,
-                  position: "absolute",
-                  overflow: "hidden"
-                }}
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -5 }}
+                fill="none"
               >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    backgroundColor: isMenu ? activeIconColor : inactiveIconColor,
-                    WebkitMaskImage: `url(${imgMdiLightClipboardText})`,
-                    maskImage: `url(${imgMdiLightClipboardText})`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain"
-                  }}
+                <rect
+                  x="6"
+                  y="4"
+                  width="12"
+                  height="16"
+                  rx="2"
+                  stroke={isMenu ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
                 />
-              </div>
+                <path
+                  d="M9 4.5h6"
+                  stroke={isMenu ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 9h7"
+                  stroke={isMenu ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 12h7"
+                  stroke={isMenu ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 15h4"
+                  stroke={isMenu ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
           <div style={{ flex: 1, position: "relative", height: 40 }}>
@@ -1275,25 +1286,23 @@ export default function MenuPage() {
                 cursor: "pointer"
               }}
             >
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -5,
-                  position: "absolute",
-                  display: "block",
-                  backgroundColor: inactiveIconColor,
-                  WebkitMaskImage: `url(${imgVector})`,
-                  maskImage: `url(${imgVector})`,
-                  WebkitMaskRepeat: "no-repeat",
-                  maskRepeat: "no-repeat",
-                  WebkitMaskPosition: "center",
-                  maskPosition: "center",
-                  WebkitMaskSize: "contain",
-                  maskSize: "contain"
-                }}
-              />
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -5 }}
+                fill="none"
+              >
+                <path
+                  d="M6 6h2l1.5 8h8l1.5-6H9.5"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx="10.5" cy="18" r="1.5" fill={inactiveIconColor} />
+                <circle cx="17" cy="18" r="1.5" fill={inactiveIconColor} />
+              </svg>
               <div
                 style={{
                   width: 136.79,
@@ -1337,33 +1346,27 @@ export default function MenuPage() {
               >
                 我的
               </div>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -6,
-                  position: "absolute",
-                  overflow: "hidden"
-                }}
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -6 }}
+                fill="none"
               >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    backgroundColor: isMine ? activeIconColor : inactiveIconColor,
-                    WebkitMaskImage: `url(${imgVector1})`,
-                    maskImage: `url(${imgVector1})`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain"
-                  }}
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3"
+                  stroke={isMine ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
                 />
-              </div>
+                <path
+                  d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"
+                  stroke={isMine ? activeIconColor : inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
         </div>

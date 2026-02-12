@@ -7,9 +7,10 @@ const roleLabels = {
   boyfriend_admin: "boyfriend_admin"
 };
 
-export default function AccountSwitch({ iconSrc }: { iconSrc: string }) {
+export default function AccountSwitch({ iconSrc }: { iconSrc?: string }) {
   const { userRole, setUserRole } = useAppStore();
   const [open, setOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,7 +67,24 @@ export default function AccountSwitch({ iconSrc }: { iconSrc: string }) {
         }}
         aria-label="切换账号"
       >
-        <img src={iconSrc} alt="" style={{ width: 22, height: 22 }} />
+        {iconSrc && !imgError ? (
+          <img
+            src={iconSrc}
+            alt=""
+            style={{ width: 22, height: 22 }}
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+              stroke="#C17B8A"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </button>
       {open && (
         <div

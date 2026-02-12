@@ -12,10 +12,7 @@ type ConfirmItem = OrderItem & {
 
 const imgFrame = "https://www.figma.com/api/mcp/asset/fedd7b33-00c6-40f7-af17-5898e3d9a756";
 const imgRectangle = "https://www.figma.com/api/mcp/asset/b91d622e-e710-4cf2-aa95-ac2b0fe8d9f9";
-const imgMdiLightClipboardText =
-  "https://www.figma.com/api/mcp/asset/89f9f58d-756e-40e8-814a-1cc0ee0dc8c3";
-const imgVector = "https://www.figma.com/api/mcp/asset/63827509-5eab-4620-9360-bf5b75bb6123";
-const imgVector1 = "https://www.figma.com/api/mcp/asset/eb51a2b8-7acf-4bb6-93af-dfc4875bf2c6";
+// icons moved to inline SVG to avoid external hotlink failures
 
 const placeholderText = "不吃香菜也没关系";
 const ITEM_HEIGHT = 86;
@@ -693,33 +690,47 @@ export default function OrderConfirmPage() {
               >
                 点餐
               </div>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -5,
-                  position: "absolute",
-                  overflow: "hidden"
-                }}
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -5 }}
+                fill="none"
               >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    backgroundColor: inactiveIconColor,
-                    WebkitMaskImage: `url(${imgMdiLightClipboardText})`,
-                    maskImage: `url(${imgMdiLightClipboardText})`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain"
-                  }}
+                <rect
+                  x="6"
+                  y="4"
+                  width="12"
+                  height="16"
+                  rx="2"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
                 />
-              </div>
+                <path
+                  d="M9 4.5h6"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 9h7"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 12h7"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8.5 15h4"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
           <div style={{ flex: "1 1 0", height: 40, position: "relative" }}>
@@ -733,32 +744,23 @@ export default function OrderConfirmPage() {
                 cursor: "pointer"
               }}
             >
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -5,
-                  position: "absolute"
-                }}
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -5 }}
+                fill="none"
               >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    backgroundColor: activeIconColor,
-                    WebkitMaskImage: `url(${imgVector})`,
-                    maskImage: `url(${imgVector})`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain"
-                  }}
+                <path
+                  d="M6 6h2l1.5 8h8l1.5-6H9.5"
+                  stroke={activeIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              </div>
+                <circle cx="10.5" cy="18" r="1.5" fill={activeIconColor} />
+                <circle cx="17" cy="18" r="1.5" fill={activeIconColor} />
+              </svg>
               <div
                 style={{
                   width: 136.79,
@@ -802,33 +804,27 @@ export default function OrderConfirmPage() {
               >
                 我的
               </div>
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  left: 52,
-                  top: -6,
-                  position: "absolute",
-                  overflow: "hidden"
-                }}
+              <svg
+                width="30"
+                height="30"
+                viewBox="0 0 24 24"
+                style={{ position: "absolute", left: 52, top: -6 }}
+                fill="none"
               >
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "block",
-                    backgroundColor: inactiveIconColor,
-                    WebkitMaskImage: `url(${imgVector1})`,
-                    maskImage: `url(${imgVector1})`,
-                    WebkitMaskRepeat: "no-repeat",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                    maskPosition: "center",
-                    WebkitMaskSize: "contain",
-                    maskSize: "contain"
-                  }}
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
                 />
-              </div>
+                <path
+                  d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"
+                  stroke={inactiveIconColor}
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
         </div>
