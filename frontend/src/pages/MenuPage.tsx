@@ -7,7 +7,6 @@ import { formatMessageTime, useAppStore } from "../store/appStore";
 
 const imgFrame = "https://www.figma.com/api/mcp/asset/73d8bdbf-69ae-4735-a992-cb9a722b5ecf";
 const imgFrame2 = "https://www.figma.com/api/mcp/asset/1f3e72a0-ce23-420b-9f01-7157bfdc6cd9";
-const imgRectangle = "https://www.figma.com/api/mcp/asset/68562002-dcdf-462b-8799-3b64a2698793";
 // bottom navigation icons are rendered inline to avoid external hotlink failures
 
 type CategoryButton = {
@@ -1186,15 +1185,12 @@ export default function MenuPage() {
             left: -11,
             top: 913,
             position: "absolute",
-            overflow: "hidden"
+            overflow: "hidden",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,233,236,0.85) 100%)",
+            borderTop: "1px solid rgba(255,207,208,0.6)",
+            boxShadow: "0 -6px 18px rgba(246,193,204,0.12)"
           }}
-        >
-          <img
-            src={imgRectangle}
-            alt=""
-            style={{ width: "100%", height: "100%", display: "block" }}
-          />
-        </div>
+        />
 
         <div
           style={{

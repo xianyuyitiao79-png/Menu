@@ -11,7 +11,7 @@ type ConfirmItem = OrderItem & {
 };
 
 const imgFrame = "https://www.figma.com/api/mcp/asset/fedd7b33-00c6-40f7-af17-5898e3d9a756";
-const imgRectangle = "https://www.figma.com/api/mcp/asset/b91d622e-e710-4cf2-aa95-ac2b0fe8d9f9";
+// footer background image replaced with gradient to avoid external hotlink issues
 // icons moved to inline SVG to avoid external hotlink failures
 
 const placeholderText = "不吃香菜也没关系";
@@ -641,17 +641,11 @@ export default function OrderConfirmPage() {
             left: -11,
             top: 913,
             position: "absolute",
-            background: "#FFF8F5",
-            outline: "1px #EDE7E9 solid",
-            outlineOffset: -0.5
+            background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,233,236,0.85) 100%)",
+            borderTop: "1px solid rgba(255,207,208,0.6)",
+            boxShadow: "0 -6px 18px rgba(246,193,204,0.12)"
           }}
-        >
-          <img
-            src={imgRectangle}
-            alt=""
-            style={{ width: "100%", height: "100%", display: "block" }}
-          />
-        </div>
+        />
 
         <div
           style={{
