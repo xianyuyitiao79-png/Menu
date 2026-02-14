@@ -1187,9 +1187,9 @@ export default function MenuPage() {
             top: 913,
             position: "absolute",
             overflow: "hidden",
-            background: "linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(255,233,236,0.85) 100%)",
-            borderTop: "1px solid rgba(255,207,208,0.6)",
-            boxShadow: "0 -6px 18px rgba(246,193,204,0.12)"
+            background: "#FFF6F8",
+            borderTop: "1px solid #F2C9D2",
+            boxShadow: "0 -6px 18px rgba(246,193,204,0.1)"
           }}
         />
 
