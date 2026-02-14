@@ -5,8 +5,6 @@ import MyOrdersCard from "../components/MyOrdersCard";
 import AccountSwitch from "../components/AccountSwitch";
 import { formatMessageTime, useAppStore } from "../store/appStore";
 
-const imgFrame = "https://www.figma.com/api/mcp/asset/73d8bdbf-69ae-4735-a992-cb9a722b5ecf";
-const imgFrame2 = "https://www.figma.com/api/mcp/asset/1f3e72a0-ce23-420b-9f01-7157bfdc6cd9";
 // bottom navigation icons are rendered inline to avoid external hotlink failures
 
 type CategoryButton = {
@@ -307,7 +305,7 @@ export default function MenuPage() {
           }}
         />
 
-        <AccountSwitch iconSrc={imgFrame} />
+        <AccountSwitch />
 
         {isMenu && (
           <>
@@ -558,20 +556,20 @@ export default function MenuPage() {
                     >
                       <div
                         style={{
-                          width: 56,
-                          height: 56,
-                          left: 16,
-                          top: 22,
+                          width: 74,
+                          height: 74,
+                          left: 12,
+                          top: 14,
                           position: "absolute",
-                          background: isSelected ? "#FFEEF0" : "#FFEEF0",
-                          borderRadius: 10,
-                          border: "1px solid rgba(246,193,204,0.6)",
+                          background: isSelected ? "#FFEEF0" : "#FFFFFF",
+                          borderRadius: 9,
+                          border: isSelected ? "1px solid #FFCFD0" : "1px solid #DEDEE2",
                           overflow: "hidden",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           color: "#C4C4C4",
-                          fontSize: 11,
+                          fontSize: 12,
                           fontFamily: "Helvetica"
                         }}
                       >
@@ -590,7 +588,7 @@ export default function MenuPage() {
                       </div>
                       <div
                         style={{
-                          left: 92,
+                          left: 114,
                           top: 26,
                           position: "absolute",
                           color: "#5A4A4E",
@@ -606,7 +604,7 @@ export default function MenuPage() {
                         <div
                           style={{
                             position: "absolute",
-                            left: 176,
+                            left: 200,
                             top: 24,
                             background: tagBg,
                             borderRadius: 8,
@@ -623,7 +621,7 @@ export default function MenuPage() {
                       )}
                       <div
                         style={{
-                          left: 92,
+                          left: 114,
                           top: 54,
                           position: "absolute",
                           color: "#A89B9E",
@@ -641,7 +639,7 @@ export default function MenuPage() {
                           width: 36,
                           height: 36,
                           right: 14,
-                          top: 20,
+                          top: 32,
                           position: "absolute",
                           background: "white",
                           borderRadius: "50%",
@@ -652,11 +650,14 @@ export default function MenuPage() {
                           cursor: "pointer"
                         }}
                       >
-                        <img
-                          src={imgFrame2}
-                          alt=""
-                          style={{ width: 16, height: 16, display: "block" }}
-                        />
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M12 6v12M6 12h12"
+                            stroke="#F6C1CC"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
                       </button>
                     </div>
                   );

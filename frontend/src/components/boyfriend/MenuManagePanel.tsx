@@ -14,6 +14,7 @@ export default function MenuManagePanel() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [draft, setDraft] = useState(() => ({ ...emptyDraft }));
+  const [imageTouched, setImageTouched] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [searching, setSearching] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -28,12 +29,14 @@ export default function MenuManagePanel() {
   const startCreate = () => {
     setEditingId(null);
     setEditorOpen(true);
+    setImageTouched(false);
     setDraft({ ...emptyDraft, categoryId: categories[0]?.id ?? 1 });
   };
 
   const startEdit = (item: MenuItem) => {
     setEditingId(item.id);
     setEditorOpen(true);
+    setImageTouched(false);
     setDraft({
       name: item.name,
       categoryId: item.categoryId,
@@ -48,7 +51,16 @@ export default function MenuManagePanel() {
     setSaving(true);
     try {
       if (editingId) {
-        await updateMenuItem(editingId, { ...draft, name: draft.name.trim() });
+        const payload: Partial<MenuItem> = {
+          name: draft.name.trim(),
+          categoryId: draft.categoryId,
+          tags: draft.tags,
+          description: draft.description
+        };
+        if (imageTouched) {
+          payload.image = draft.image;
+        }
+        await updateMenuItem(editingId, payload);
       } else {
         await addMenuItem({ ...draft, name: draft.name.trim() });
       }
@@ -102,8 +114,10 @@ export default function MenuManagePanel() {
             ctx.drawImage(img, 0, 0, width, height);
             const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
             setDraft((prev) => ({ ...prev, image: compressedBase64 }));
+            setImageTouched(true);
           } else {
             setDraft((prev) => ({ ...prev, image: originalBase64 }));
+            setImageTouched(true);
           }
         };
         img.src = originalBase64;
@@ -121,16 +135,19 @@ export default function MenuManagePanel() {
     const img = new Image();
     img.onload = () => {
       setDraft((prev) => ({ ...prev, image: img.currentSrc || img.src }));
+      setImageTouched(true);
       setSearching(false);
     };
     img.onerror = () => {
       const fallback = new Image();
       fallback.onload = () => {
         setDraft((prev) => ({ ...prev, image: fallback.currentSrc || fallback.src }));
+        setImageTouched(true);
         setSearching(false);
       };
       fallback.onerror = () => {
         setDraft((prev) => ({ ...prev, image: "" }));
+        setImageTouched(true);
         setSearching(false);
       };
       fallback.src = fallbackUrl;
@@ -203,7 +220,10 @@ export default function MenuManagePanel() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setDraft((prev) => ({ ...prev, image: "" }))}
+                  onClick={() => {
+                    setDraft((prev) => ({ ...prev, image: "" }));
+                    setImageTouched(true);
+                  }}
                   className="text-[11px] text-[#C17B8A]"
                 >
                   清除

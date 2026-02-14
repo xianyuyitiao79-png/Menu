@@ -6,8 +6,6 @@ import MenuManagePanel from "../components/boyfriend/MenuManagePanel";
 import StatsPanel from "../components/boyfriend/StatsPanel";
 import { useAppStore } from "../store/appStore";
 
-const imgHeart = "https://www.figma.com/api/mcp/asset/0fbc796c-bc4b-40ce-bd62-69a54c7b16e6";
-
 export default function BoyfriendDashboard() {
   const { avatars, setAvatar } = useAppStore();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -46,7 +44,7 @@ export default function BoyfriendDashboard() {
       >
         <div className="absolute inset-0 bg-[#FFF8F5]" />
         <div className="absolute left-0 top-0 h-[159px] w-full bg-[#FFE9EC] border-b border-[#EDE7E9]" />
-        <AccountSwitch iconSrc={imgHeart} />
+        <AccountSwitch />
 
         <div className="absolute left-0 top-0 h-full w-full px-5 pt-[84px] pb-6">
           <div

@@ -10,7 +10,6 @@ type ConfirmItem = OrderItem & {
   description?: string;
 };
 
-const imgFrame = "https://www.figma.com/api/mcp/asset/fedd7b33-00c6-40f7-af17-5898e3d9a756";
 // footer background image replaced with gradient to avoid external hotlink issues
 // icons moved to inline SVG to avoid external hotlink failures
 
@@ -218,7 +217,7 @@ export default function OrderConfirmPage() {
           }}
         />
 
-        <AccountSwitch iconSrc={imgFrame} />
+        <AccountSwitch />
 
         <div
           style={{
