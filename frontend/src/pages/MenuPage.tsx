@@ -604,7 +604,7 @@ export default function MenuPage() {
                         <div
                           style={{
                             position: "absolute",
-                            left: 200,
+                            left: 232,
                             top: 24,
                             background: tagBg,
                             borderRadius: 8,
