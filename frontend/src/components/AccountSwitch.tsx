@@ -7,7 +7,13 @@ const roleLabels = {
   boyfriend_admin: "boyfriend_admin"
 };
 
-export default function AccountSwitch({ iconSrc }: { iconSrc?: string }) {
+export default function AccountSwitch({
+  iconSrc,
+  mode = "fixed"
+}: {
+  iconSrc?: string;
+  mode?: "fixed" | "inline";
+}) {
   const { userRole, setUserRole } = useAppStore();
   const [open, setOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -37,18 +43,25 @@ export default function AccountSwitch({ iconSrc }: { iconSrc?: string }) {
     }
   };
 
+  const containerStyle =
+    mode === "inline"
+      ? {
+          position: "relative" as const,
+          width: 44,
+          height: 44,
+          zIndex: 30
+        }
+      : {
+          position: "absolute" as const,
+          left: 406,
+          top: 24,
+          width: 44,
+          height: 44,
+          zIndex: 30
+        };
+
   return (
-    <div
-      ref={panelRef}
-      style={{
-        position: "absolute",
-        left: 406,
-        top: 24,
-        width: 44,
-        height: 44,
-        zIndex: 30
-      }}
-    >
+    <div ref={panelRef} style={containerStyle}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}

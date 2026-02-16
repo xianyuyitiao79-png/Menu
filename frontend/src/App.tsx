@@ -9,14 +9,18 @@ import { AppStoreProvider } from "./store/appStore";
 export default function App() {
   return (
     <AppStoreProvider>
-      <div className="page-shell min-h-screen">
-        <Routes>
-          <Route path="/" element={<MenuPage />} />
-          <Route path="/confirm" element={<OrderConfirmPage />} />
-          <Route path="/success" element={<SuccessPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/boyfriend" element={<BoyfriendDashboard />} />
-        </Routes>
+      <div className="page-shell app min-h-screen">
+        <header className="app-header" />
+        <main className="app-main">
+          <Routes>
+            <Route path="/" element={<MenuPage />} />
+            <Route path="/confirm" element={<OrderConfirmPage />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/boyfriend" element={<BoyfriendDashboard />} />
+          </Routes>
+        </main>
+        <footer className="app-footer" />
       </div>
     </AppStoreProvider>
   );

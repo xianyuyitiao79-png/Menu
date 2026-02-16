@@ -182,7 +182,207 @@ export default function OrderConfirmPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f2f1] flex items-center justify-center py-6">
+    <>
+      <div className="mobile-only">
+        <div className="page confirm-mobile">
+          <header className="menu-mobile__header">
+            <div className="menu-mobile__title">
+              <h1>下单确认</h1>
+              <p>老婆大人，请确认</p>
+            </div>
+            <AccountSwitch mode="inline" />
+          </header>
+          <main className="confirm-list">
+            {items.length === 0 ? (
+              <div className="menu-mobile__empty">还没有选择菜品～</div>
+            ) : (
+              items.map((item) => (
+                <div key={item.dishId} className="card menu-card">
+                  <div className="menu-card__image">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      "暂无图片"
+                    )}
+                  </div>
+                  <div className="menu-card__content">
+                    <div className="menu-card__title">
+                      <h3>{item.name ?? "用心烹制"}</h3>
+                    </div>
+                    <div className="menu-card__desc">
+                      {item.description ?? "用心制作，温暖入味"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => adjustQty(item.dishId, -1)}
+                      style={{
+                        width: "2rem",
+                        height: "2rem",
+                        borderRadius: "50%",
+                        border: "1px solid #F6C1CC",
+                        background: "white",
+                        color: "#C17B8A"
+                      }}
+                    >
+                      -
+                    </button>
+                    <span style={{ minWidth: "1.5rem", textAlign: "center" }}>
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => adjustQty(item.dishId, 1)}
+                      style={{
+                        width: "2rem",
+                        height: "2rem",
+                        borderRadius: "50%",
+                        border: "1px solid #F6C1CC",
+                        background: "white",
+                        color: "#C17B8A"
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder={placeholderText}
+              style={{
+                minHeight: "6rem",
+                width: "100%",
+                borderRadius: "1rem",
+                border: "1px solid rgba(237,231,233,0.6)",
+                background: "rgba(255,255,255,0.9)",
+                padding: "0.75rem",
+                fontSize: "0.85rem",
+                color: "#5A4A4E"
+              }}
+            />
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={goToMenu}
+                style={{
+                  flex: 1,
+                  height: "2.75rem",
+                  borderRadius: "1.5rem",
+                  border: "1px solid #F6C1CC",
+                  background: "white",
+                  color: "#C17B8A"
+                }}
+              >
+                返回菜单
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={submitting}
+                style={{
+                  flex: 1,
+                  height: "2.75rem",
+                  borderRadius: "1.5rem",
+                  border: "none",
+                  background: "#FFCFD0",
+                  color: "white",
+                  fontWeight: 700,
+                  opacity: submitting ? 0.6 : 1
+                }}
+              >
+                {submitting ? "提交中…" : "确认下单"}
+              </button>
+            </div>
+          </main>
+          <footer className="menu-mobile__footer">
+            <div className="mobile-tabs">
+              <button onClick={goToMenu} className="mobile-tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect
+                    x="6"
+                    y="4"
+                    width="12"
+                    height="16"
+                    rx="2"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                  />
+                  <path
+                    d="M9 4.5h6"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8.5 9h7"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8.5 12h7"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M8.5 15h4"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span style={{ color: "#999999" }}>点餐</span>
+              </button>
+              <button onClick={goToConfirmTab} className="mobile-tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M6 6h2l1.5 8h8l1.5-6H9.5"
+                    stroke={activeIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle cx="10.5" cy="18" r="1.5" fill={activeIconColor} />
+                  <circle cx="17" cy="18" r="1.5" fill={activeIconColor} />
+                </svg>
+                <span style={{ color: "#FFCFD0" }}>
+                  下单{totalCount > 0 ? ` (${totalCount})` : ""}
+                </span>
+              </button>
+              <button onClick={goToMine} className="mobile-tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <circle
+                    cx="12"
+                    cy="8"
+                    r="3"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                  />
+                  <path
+                    d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"
+                    stroke={inactiveIconColor}
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span style={{ color: "#999999" }}>我的</span>
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <div className="desktop-only">
+        <div className="min-h-screen bg-[#f6f2f1] flex items-center justify-center py-6">
       <div
         className="relative overflow-hidden rounded-[20px]"
         style={{
@@ -821,7 +1021,9 @@ export default function OrderConfirmPage() {
             </button>
           </div>
         </div>
-      </div>
+        </div>
     </div>
+      </div>
+    </>
   );
 }

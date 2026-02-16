@@ -195,6 +195,66 @@ export default function MenuPage() {
   const activeIconColor = "#FFCFD0";
   const inactiveIconColor = "#999999";
 
+  const renderMobileMenuCard = (dish: Dish) => {
+    const isFavorite = dish.tags?.includes("她最爱");
+    const isSelected = Boolean(cart[dish.id]);
+    const tagBg = isFavorite
+      ? "rgba(193, 123, 138, 0.12)"
+      : "rgba(184, 147, 110, 0.12)";
+    const tagColor = isFavorite ? "#C17B8A" : "#B8936E";
+    const rawImage = typeof dish.image === "string" ? dish.image.trim() : "";
+    const normalizedImage =
+      rawImage.startsWith("data:image") ? rawImage.replace(/\s+/g, "") : rawImage;
+    const imageSrc =
+      normalizedImage &&
+      !brokenImages[dish.id] &&
+      (normalizedImage.startsWith("data:image") ||
+        normalizedImage.startsWith("http://") ||
+        normalizedImage.startsWith("https://"))
+        ? normalizedImage
+        : "";
+
+    return (
+      <div key={dish.id} className={`card menu-card ${isSelected ? "is-selected" : ""}`}>
+        <div className="menu-card__image">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={dish.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={() => setBrokenImages((prev) => ({ ...prev, [dish.id]: true }))}
+            />
+          ) : (
+            "暂无图片"
+          )}
+        </div>
+        <div className="menu-card__content">
+          <div className="menu-card__title">
+            <h3>{dish.name}</h3>
+            {dish.tags && (
+              <span className="menu-card__tag" style={{ background: tagBg, color: tagColor }}>
+                {dish.tags}
+              </span>
+            )}
+          </div>
+          <div className="menu-card__desc">
+            {dish.description ?? (dish.tags ? "纯手工制作，鲜嫩多汁" : "")}
+          </div>
+        </div>
+        <button className="menu-card__add" onClick={() => addDish(dish)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 6v12M6 12h12"
+              stroke="#F6C1CC"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+    );
+  };
+
   function handleAddPreference() {
     if (typeof window === "undefined") return;
     const input = window.prompt("输入新的口味偏好");
@@ -268,7 +328,326 @@ export default function MenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f2f1] flex items-center justify-center py-6">
+    <>
+      <div className="mobile-only">
+        <div className="page menu-mobile">
+          {isMenu && (
+            <>
+              <header className="menu-mobile__header">
+                <div className="menu-mobile__title">
+                  <h1>小涵的专属小厨房</h1>
+                  <p>老婆大人，请点菜</p>
+                </div>
+                <AccountSwitch mode="inline" />
+              </header>
+              <main className="menu-mobile__main">
+                <div className="menu-mobile__layout">
+                  <aside className="menu-mobile__categories">
+                    {categoryButtons.length === 0 ? (
+                      <div className="menu-mobile__empty">暂无分类</div>
+                    ) : (
+                      categoryButtons.map((cat) => {
+                        const active = activeCategory === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            className={`menu-mobile__category ${active ? "is-active" : ""}`}
+                            onClick={() => setActiveCategory(cat.id)}
+                          >
+                            <span className="menu-mobile__emoji">{cat.emoji}</span>
+                            <span className="menu-mobile__label">{cat.label}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </aside>
+                  <section className="menu-mobile__list">
+                    {loadError && (
+                      <div className="menu-mobile__error">
+                        {loadError}
+                        <button onClick={refreshData} className="menu-mobile__retry">
+                          重新加载
+                        </button>
+                      </div>
+                    )}
+                    {isLoading && filteredDishes.length === 0 ? (
+                      <div className="menu-mobile__empty">菜单加载中...</div>
+                    ) : filteredDishes.length === 0 ? (
+                      <div className="menu-mobile__empty">暂无菜品</div>
+                    ) : (
+                      filteredDishes.map(renderMobileMenuCard)
+                    )}
+                  </section>
+                </div>
+                <div className="menu-mobile__cart">
+                  <button type="button" onClick={goToConfirm} aria-label="查看下单">
+                    <svg
+                      viewBox="0 0 73 72"
+                      width="64"
+                      height="64"
+                      style={{ display: "block" }}
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle
+                        cx="32.9216"
+                        cy="38.647"
+                        r="32.4216"
+                        fill="white"
+                        stroke="#FFCFD0"
+                      />
+                      <path
+                        d="M45.3259 47.0994H25.7956C25.1678 47.0994 24.6285 46.6617 24.5003 46.0517L20.1858 25.8185H15.9464C15.2126 25.8185 14.6202 25.2261 14.6202 24.4923C14.6202 23.7585 15.2126 23.1661 15.9464 23.1661H21.2556C21.8833 23.1661 22.4226 23.6038 22.5508 24.2138L26.8654 44.447H45.3214C46.0553 44.447 46.6476 45.0394 46.6476 45.7732C46.6476 46.507 46.0553 47.0994 45.3259 47.0994Z"
+                        fill="#FFCFD0"
+                      />
+                      <path
+                        d="M46.2984 40.5744H24.4163C23.6825 40.5744 23.0901 39.9821 23.0901 39.2482C23.0901 38.5144 23.6825 37.922 24.4163 37.922H45.4363L48.3053 31.4856H22.9044C22.1706 31.4856 21.5782 30.8933 21.5782 30.1594C21.5782 29.4256 22.1706 28.8333 22.9044 28.8333H50.3432C50.7941 28.8333 51.2097 29.0587 51.4572 29.4389C51.7048 29.8191 51.7401 30.2921 51.5545 30.6988L47.5096 39.7875C47.2974 40.265 46.82 40.5744 46.2984 40.5744Z"
+                        fill="#FFCFD0"
+                      />
+                    </svg>
+                    {totalCount > 0 && (
+                      <span className="menu-mobile__badge">
+                        {totalCount > 99 ? "99+" : totalCount}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </main>
+              <footer className="menu-mobile__footer">
+                <div className="mobile-tabs">
+                  <button onClick={() => setActiveTab("menu")} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="6"
+                        y="4"
+                        width="12"
+                        height="16"
+                        rx="2"
+                        stroke={isMenu ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M9 4.5h6"
+                        stroke={isMenu ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 9h7"
+                        stroke={isMenu ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 12h7"
+                        stroke={isMenu ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 15h4"
+                        stroke={isMenu ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span style={{ color: isMenu ? "#FFCFD0" : "#999999" }}>点餐</span>
+                  </button>
+                  <button onClick={goToConfirm} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M6 6h2l1.5 8h8l1.5-6H9.5"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle cx="10.5" cy="18" r="1.5" fill={inactiveIconColor} />
+                      <circle cx="17" cy="18" r="1.5" fill={inactiveIconColor} />
+                    </svg>
+                    <span style={{ color: "#999999" }}>
+                      下单{totalCount > 0 ? ` (${totalCount})` : ""}
+                    </span>
+                  </button>
+                  <button onClick={() => setActiveTab("mine")} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        cx="12"
+                        cy="8"
+                        r="3"
+                        stroke={isMine ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"
+                        stroke={isMine ? activeIconColor : inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span style={{ color: isMine ? "#FFCFD0" : "#999999" }}>我的</span>
+                  </button>
+                </div>
+              </footer>
+            </>
+          )}
+
+          {isMine && (
+            <>
+              <header className="menu-mobile__header">
+                <div className="menu-mobile__title">
+                  <h1>我的</h1>
+                  <p>爱的小细节都在这里</p>
+                </div>
+                <AccountSwitch mode="inline" />
+              </header>
+              <main className="menu-mobile__main">
+                <div className="card" style={{ padding: "1rem", borderRadius: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <button
+                      onClick={handleAvatarClick}
+                      style={{
+                        width: "3.5rem",
+                        height: "3.5rem",
+                        borderRadius: "50%",
+                        border: "2px solid #F6C1CC",
+                        background: "rgba(255,255,255,0.7)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#C17B8A",
+                        fontSize: "0.6rem",
+                        cursor: "pointer",
+                        padding: 0,
+                        overflow: "hidden"
+                      }}
+                    >
+                      {avatar ? (
+                        <img
+                          src={avatar}
+                          alt="头像"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <span>点击添加</span>
+                      )}
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        style={{ display: "none" }}
+                      />
+                    </button>
+                    <div>
+                      <div style={{ fontSize: "1rem", fontWeight: 700, color: "#5A4A4E" }}>
+                        小涵老婆
+                      </div>
+                      <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.4rem" }}>
+                        {prefs.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              padding: "0.2rem 0.6rem",
+                              borderRadius: "999px",
+                              background: "#FEF2F1",
+                              border: "1px solid #FFCFD0",
+                              color: "#C17B8A",
+                              fontSize: "0.7rem"
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <MyOrdersCard orders={orders} />
+              </main>
+              <footer className="menu-mobile__footer">
+                <div className="mobile-tabs">
+                  <button onClick={() => setActiveTab("menu")} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="6"
+                        y="4"
+                        width="12"
+                        height="16"
+                        rx="2"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M9 4.5h6"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 9h7"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 12h7"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M8.5 15h4"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span style={{ color: "#999999" }}>点餐</span>
+                  </button>
+                  <button onClick={goToConfirm} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M6 6h2l1.5 8h8l1.5-6H9.5"
+                        stroke={inactiveIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle cx="10.5" cy="18" r="1.5" fill={inactiveIconColor} />
+                      <circle cx="17" cy="18" r="1.5" fill={inactiveIconColor} />
+                    </svg>
+                    <span style={{ color: "#999999" }}>
+                      下单{totalCount > 0 ? ` (${totalCount})` : ""}
+                    </span>
+                  </button>
+                  <button onClick={() => setActiveTab("mine")} className="mobile-tab">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                      <circle
+                        cx="12"
+                        cy="8"
+                        r="3"
+                        stroke={activeIconColor}
+                        strokeWidth="1.6"
+                      />
+                      <path
+                        d="M6 19c1.5-3 4-4 6-4s4.5 1 6 4"
+                        stroke={activeIconColor}
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span style={{ color: "#FFCFD0" }}>我的</span>
+                  </button>
+                </div>
+              </footer>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="desktop-only">
+        <div className="min-h-screen bg-[#f6f2f1] flex items-center justify-center py-6">
       <div
         style={{
           width: 474,
@@ -1367,8 +1746,10 @@ export default function MenuPage() {
             </button>
           </div>
         </div>
-        
+      
       </div>
     </div>
+      </div>
+    </>
   );
 }
