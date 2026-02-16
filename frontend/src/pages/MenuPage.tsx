@@ -502,7 +502,17 @@ export default function MenuPage() {
                 <AccountSwitch mode="inline" />
               </header>
               <main className="menu-mobile__main">
-                <div className="card" style={{ padding: "1rem", borderRadius: "1rem" }}>
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "1rem",
+                    background: "rgba(255,255,255,0.75)",
+                    border: "1px solid rgba(246,193,204,0.7)",
+                    boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+                    backdropFilter: "blur(16px)"
+                  }}
+                >
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                     <button
                       onClick={handleAvatarClick}
@@ -543,8 +553,8 @@ export default function MenuPage() {
                       <div style={{ fontSize: "1rem", fontWeight: 700, color: "#5A4A4E" }}>
                         小涵老婆
                       </div>
-                      <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.4rem" }}>
-                        {prefs.slice(0, 3).map((tag) => (
+                      <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                        {prefs.map((tag) => (
                           <span
                             key={tag}
                             style={{
@@ -563,7 +573,266 @@ export default function MenuPage() {
                     </div>
                   </div>
                 </div>
+
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "1rem",
+                    background: "rgba(255,255,255,0.72)",
+                    border: "1px solid rgba(246,193,204,0.6)",
+                    boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+                    backdropFilter: "blur(16px)"
+                  }}
+                >
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#5A4A4E" }}>
+                    口味偏好
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "0.6rem" }}>
+                    {prefs.map((item) => (
+                      <div
+                        key={item}
+                        onPointerDown={() => handlePrefPressStart(item)}
+                        onPointerUp={handlePrefPressCancel}
+                        onPointerLeave={handlePrefPressCancel}
+                        onPointerCancel={handlePrefPressCancel}
+                        style={{
+                          padding: "0.4rem 0.75rem",
+                          borderRadius: "999px",
+                          border: "1px solid #F6C1CC",
+                          background: "rgba(255,255,255,0.8)",
+                          color: "#C17B8A",
+                          fontSize: "0.75rem",
+                          cursor: "pointer",
+                          userSelect: "none"
+                        }}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                    <button
+                      onClick={handleAddPreference}
+                      style={{
+                        padding: "0.4rem 0.75rem",
+                        borderRadius: "999px",
+                        border: "1px solid #F6C1CC",
+                        background: "rgba(255,255,255,0.8)",
+                        color: "#C17B8A",
+                        fontSize: "0.85rem",
+                        cursor: "pointer"
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div style={{ marginTop: "0.4rem", fontSize: "0.7rem", color: "#B39BA0" }}>
+                    长按偏好可删除
+                  </div>
+                </div>
+
                 <MyOrdersCard orders={orders} />
+
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "1rem",
+                    background: "rgba(255,255,255,0.72)",
+                    border: "1px solid rgba(246,193,204,0.6)",
+                    boxShadow: "0 10px 24px rgba(0,0,0,0.06)",
+                    backdropFilter: "blur(16px)"
+                  }}
+                >
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#5A4A4E", marginBottom: "0.6rem" }}>
+                    常点菜单
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {frequentMenu.length === 0 ? (
+                      <div
+                        style={{
+                          padding: "0.75rem",
+                          borderRadius: "0.75rem",
+                          background: "rgba(255,255,255,0.85)",
+                          border: "1px solid rgba(237,231,233,0.8)",
+                          color: "#A89B9E",
+                          fontSize: "0.75rem"
+                        }}
+                      >
+                        还没有常点记录，先去点菜吧～
+                      </div>
+                    ) : (
+                      frequentMenu.map((item) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.75rem",
+                            padding: "0.75rem",
+                            borderRadius: "0.75rem",
+                            background: "rgba(255,255,255,0.85)",
+                            border: "1px solid rgba(237,231,233,0.8)"
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "3rem",
+                              height: "3rem",
+                              borderRadius: "0.65rem",
+                              background: "#FFEEF0",
+                              border: "1px solid rgba(246,193,204,0.6)",
+                              overflow: "hidden",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#C4C4C4",
+                              fontSize: "0.7rem"
+                            }}
+                          >
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            ) : (
+                              "暂无图片"
+                            )}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#5A4A4E" }}>
+                              {item.name}
+                            </div>
+                            <div style={{ marginTop: "0.2rem", fontSize: "0.75rem", color: "#A89B9E" }}>
+                              {item.desc}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right", minWidth: 32 }}>
+                            <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#C17B8A" }}>
+                              {item.count}
+                            </div>
+                            <div style={{ fontSize: "0.7rem", color: "#A89B9E" }}>次</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className="card"
+                  style={{
+                    padding: "1rem",
+                    borderRadius: "1rem",
+                    background: "rgba(254,242,241,0.5)",
+                    border: "1px solid rgba(255,207,208,0.6)",
+                    boxShadow: "0 4px 16px rgba(246,193,204,0.08)",
+                    backdropFilter: "blur(12px)"
+                  }}
+                >
+                  <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#5A4A4E", marginBottom: "0.75rem" }}>
+                    他的小留言
+                  </div>
+                  <div
+                    className="glass-scroll"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                      maxHeight: 240,
+                      overflowY: "auto",
+                      padding: "0.75rem",
+                      borderRadius: "1rem",
+                      border: "1px solid rgba(237,231,233,0.4)",
+                      background: "rgba(255,255,255,0.65)"
+                    }}
+                  >
+                    {chatMessages.map((item) => {
+                      const isMe = item.sender === "me";
+                      return (
+                        <div key={item.id} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start" }}>
+                          <div
+                            style={{
+                              maxWidth: "78%",
+                              padding: "0.5rem 0.75rem",
+                              borderRadius: "1rem",
+                              border: isMe
+                                ? "1px solid rgba(237,231,233,0.6)"
+                                : "1px solid #FFCfd0",
+                              background: isMe
+                                ? "rgba(255,255,255,0.95)"
+                                : "rgba(255,207,208,0.3)",
+                              boxShadow: "0 6px 16px rgba(0,0,0,0.05)",
+                              color: "#5A4A4E",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "0.25rem"
+                            }}
+                          >
+                            <div style={{ fontSize: "0.75rem", lineHeight: "1.1rem", whiteSpace: "pre-wrap" }}>
+                              {item.text}
+                            </div>
+                            <div style={{ fontSize: "0.65rem", color: "#A89B9E", textAlign: isMe ? "right" : "left" }}>
+                              {formatMessageTime(item.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div ref={chatEndRef} />
+                  </div>
+                  <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(event) => setChatInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      placeholder="回复他的留言..."
+                      style={{
+                        flex: 1,
+                        height: "2.25rem",
+                        borderRadius: "0.75rem",
+                        border: "1px solid rgba(237,231,233,0.6)",
+                        background: "rgba(255,255,255,0.9)",
+                        padding: "0 0.75rem",
+                        fontSize: "0.75rem",
+                        color: "#5A4A4E",
+                        outline: "none"
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendMessage}
+                      style={{
+                        width: "2.75rem",
+                        height: "2.25rem",
+                        borderRadius: "0.75rem",
+                        border: "none",
+                        background: "linear-gradient(135deg,#F6C1CC,#FFCFD0)",
+                        color: "#fff",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 8px rgba(246,193,204,0.2)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M4 12L20 4L13 20L11 13L4 12Z"
+                          stroke="white"
+                          strokeWidth="1.5"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </main>
               <footer className="menu-mobile__footer">
                 <div className="mobile-tabs">
