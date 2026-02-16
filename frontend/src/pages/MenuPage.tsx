@@ -241,12 +241,12 @@ export default function MenuPage() {
             {dish.description ?? (dish.tags ? "纯手工制作，鲜嫩多汁" : "")}
           </div>
         </div>
-        <button className="menu-card__add" onClick={() => addDish(dish)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <button className="menu-card__add" onClick={() => addDish(dish)} type="button">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path
-              d="M12 6v12M6 12h12"
-              stroke="#F6C1CC"
-              strokeWidth="2"
+              d="M8 3.33333V12.6667M3.33333 8H12.6667"
+              stroke="#C17B8A"
+              strokeWidth="2.5"
               strokeLinecap="round"
             />
           </svg>
@@ -1026,14 +1026,22 @@ export default function MenuPage() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          boxSizing: "border-box",
+                          padding: 0
                         }}
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          aria-hidden="true"
+                        >
                           <path
-                            d="M12 6v12M6 12h12"
-                            stroke="#F6C1CC"
-                            strokeWidth="2"
+                            d="M8 3.33333V12.6667M3.33333 8H12.6667"
+                            stroke="#C17B8A"
+                            strokeWidth="2.5"
                             strokeLinecap="round"
                           />
                         </svg>
