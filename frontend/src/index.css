@@ -331,6 +331,8 @@ button {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-sizing: border-box;
+    padding: 0;
   }
 
   .mobile-tabs {
